@@ -1,0 +1,59 @@
+@use 'styles/material-theme';
+@use 'styles/variables';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bp-soft-background);
+  color: var(--bp-dark-navy);
+  font-family: Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.page-title h1 {
+  color: var(--bp-action-blue);
+  font-size: 32px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.page-title p {
+  color: var(--bp-slate-gray);
+  margin: 6px 0 0;
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+.muted {
+  color: var(--bp-slate-gray);
+}
