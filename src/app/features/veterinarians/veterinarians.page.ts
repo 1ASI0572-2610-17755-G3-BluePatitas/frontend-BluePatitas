@@ -13,7 +13,7 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
   template: `
     <div class="page-header">
       <div class="page-title"><h1>{{ 'veterinarians.title' | translate }}</h1><p>{{ 'veterinarians.subtitle' | translate }}</p></div>
-      <bp-button icon="person_add" (clicked)="addOpen = true">{{ 'veterinarians.add' | translate }}</bp-button>
+      <bp-button (clicked)="addOpen = true">{{ 'veterinarians.add' | translate }}</bp-button>
     </div>
     <bp-card>
       <div class="vet-list">
@@ -21,7 +21,7 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
           <article>
             <div><strong>{{ vet.name }}</strong><p>{{ vet.specialty }} · {{ vet.email }}</p></div>
             <bp-status-chip [status]="vet.status" />
-            <bp-button variant="secondary" icon="edit" (clicked)="editOpen = true">{{ 'common.edit' | translate }}</bp-button>
+            <bp-button variant="secondary" (clicked)="editOpen = true">{{ 'common.edit' | translate }}</bp-button>
           </article>
         }
       </div>
@@ -29,7 +29,7 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
     <bp-add-veterinarian-modal [open]="addOpen" (closed)="addOpen = false" />
     <bp-edit-veterinarian-modal [open]="editOpen" (closed)="editOpen = false" />
   `,
-  styles: [`.vet-list { display: grid; gap: 12px; } article { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: center; border: 1px solid var(--bp-border); border-radius: 14px; padding: 16px; } p { margin: 4px 0 0; color: var(--bp-slate-gray); }`],
+  styles: [`.vet-list { display: grid; gap: 12px; } article { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 18px; align-items: center; border: 1px solid var(--bp-border); border-radius: 14px; padding: 18px 20px; background: #fff; } p { margin: 4px 0 0; color: var(--bp-slate-gray); }`],
 })
 export class VeterinariansPage implements OnInit {
   vets: Veterinarian[] = [];

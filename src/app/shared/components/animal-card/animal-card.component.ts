@@ -15,11 +15,16 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
     </button>
   `,
   styles: [`
-    button { width: 100%; display: grid; grid-template-columns: 56px 1fr auto; grid-template-rows: auto auto; gap: 4px 14px; align-items: center; padding: 14px; border: 1px solid var(--bp-border); border-radius: 14px; background: white; text-align: left; cursor: pointer; }
-    img { grid-row: 1 / span 2; width: 56px; height: 56px; border-radius: 14px; object-fit: cover; background: var(--bp-primary-blue); }
-    strong { font-size: 16px; }
-    small { color: var(--bp-slate-gray); }
-    bp-status-chip { grid-row: 1 / span 2; }
+    button { width: 100%; display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 6px 16px; align-items: center; padding: 16px; border: 1px solid var(--bp-border); border-radius: 16px; background: white; text-align: left; cursor: pointer; box-shadow: 0 4px 14px rgba(11,31,47,.04); }
+    button:hover { border-color: var(--bp-secondary-blue); box-shadow: 0 10px 24px rgba(11,31,47,.08); }
+    img { grid-column: 1; grid-row: 1 / span 2; width: 64px; height: 64px; border-radius: 14px; object-fit: cover; background: var(--bp-primary-blue); }
+    strong { grid-column: 2; grid-row: 1; font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
+    small { grid-column: 2; grid-row: 2; color: var(--bp-slate-gray); min-width: 0; overflow-wrap: anywhere; }
+    bp-status-chip { grid-column: 3; grid-row: 1 / span 2; justify-self: end; }
+    @media (max-width: 720px) {
+      button { grid-template-columns: 64px minmax(0, 1fr); }
+      bp-status-chip { grid-column: 2; grid-row: 3; justify-self: start; }
+    }
   `],
 })
 export class AnimalCardComponent {

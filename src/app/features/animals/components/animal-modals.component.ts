@@ -16,11 +16,14 @@ import { FormFieldComponent } from '../../../shared/components/form-field/form-f
         <bp-form-field label="Breed" />
         <bp-form-field label="Age" />
         <bp-form-field label="Weight" />
-        <bp-button>{{ 'common.save' | translate }}</bp-button>
+        <div class="modal-actions">
+          <bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button>
+          <bp-button>{{ 'common.save' | translate }}</bp-button>
+        </div>
       </div>
     </bp-modal>
   `,
-  styles: [`.form-grid { display: grid; gap: 12px; }`],
+  styles: [`.form-grid { display: grid; gap: 14px; } .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }`],
 })
 export class AddAnimalModalComponent {
   @Input() open = false;
@@ -36,11 +39,14 @@ export class AddAnimalModalComponent {
       <div class="modal-body form-grid">
         <bp-form-field label="Diet name" placeholder="Adult Care" />
         <bp-form-field label="Schedule" placeholder="08:00 / 18:00" />
-        <bp-button>{{ 'common.save' | translate }}</bp-button>
+        <div class="modal-actions">
+          <bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button>
+          <bp-button>{{ 'common.save' | translate }}</bp-button>
+        </div>
       </div>
     </bp-modal>
   `,
-  styles: [`.form-grid { display: grid; gap: 12px; }`],
+  styles: [`.form-grid { display: grid; gap: 14px; } .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }`],
 })
 export class AssignDietModalComponent {
   @Input() open = false;

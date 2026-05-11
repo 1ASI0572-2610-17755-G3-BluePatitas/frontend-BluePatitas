@@ -78,6 +78,7 @@
   "settings.title": "Settings",
   "settings.subtitle": "Manage shelter information, users, requests and IoT devices.",
   "settings.editShelter": "Edit shelter data",
+  "settings.usersPermissions": "Users and permissions",
   "settings.addUser": "Add user",
   "settings.editUser": "Edit user",
   "settings.accessRequests": "Access requests",

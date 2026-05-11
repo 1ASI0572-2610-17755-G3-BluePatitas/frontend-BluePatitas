@@ -14,7 +14,17 @@ body {
   margin: 0;
   background: var(--bp-soft-background);
   color: var(--bp-dark-navy);
-  font-family: Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--bp-ui-font);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--bp-heading-font);
+  letter-spacing: 0;
 }
 
 a {
@@ -27,6 +37,30 @@ input,
 select,
 textarea {
   font: inherit;
+  font-family: var(--bp-ui-font);
+}
+
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-outlined-button,
+.mat-mdc-form-field,
+.mat-mdc-select,
+.mat-mdc-option,
+.mat-mdc-input-element {
+  font-family: var(--bp-ui-font) !important;
+}
+
+.mat-mdc-text-field-wrapper {
+  border-radius: 15px !important;
+  background: var(--bp-surface-blue) !important;
+}
+
+.mat-mdc-form-field-outline,
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-color: var(--bp-border) !important;
 }
 
 .page-header {

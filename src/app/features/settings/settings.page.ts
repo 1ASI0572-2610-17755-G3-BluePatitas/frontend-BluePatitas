@@ -13,20 +13,20 @@ import { AccessRequestsModalComponent, AddIoTDeviceModalComponent, AddUserModalC
   template: `
     <div class="page-header">
       <div class="page-title"><h1>{{ 'settings.title' | translate }}</h1><p>{{ 'settings.subtitle' | translate }}</p></div>
-      <bp-button icon="settings" (clicked)="shelterOpen = true">{{ 'settings.editShelter' | translate }}</bp-button>
+      <bp-button (clicked)="shelterOpen = true">{{ 'settings.editShelter' | translate }}</bp-button>
     </div>
     <section class="settings-grid">
       <bp-card [title]="'topbar.shelter' | translate">
         <p class="muted">{{ shelterAddress }}</p>
         <div class="actions"><bp-button variant="secondary" (clicked)="requestsOpen = true">{{ 'settings.accessRequests' | translate }}</bp-button><bp-button variant="secondary" (clicked)="deviceOpen = true">{{ 'settings.addDevice' | translate }}</bp-button></div>
       </bp-card>
-      <bp-card [title]="'settings.addUser' | translate">
+      <bp-card [title]="'settings.usersPermissions' | translate">
         <div class="users">
           @for (user of users; track user.id) {
-            <article><div><strong>{{ user.name }}</strong><p>{{ user.role }} · {{ user.email }}</p></div><bp-status-chip [status]="user.status" /><bp-button variant="secondary" icon="edit" (clicked)="userOpen = true">{{ 'common.edit' | translate }}</bp-button></article>
+            <article><div><strong>{{ user.name }}</strong><p>{{ user.role }} · {{ user.email }}</p></div><bp-status-chip [status]="user.status" /><bp-button variant="secondary" (clicked)="userOpen = true">{{ 'common.edit' | translate }}</bp-button></article>
           }
         </div>
-        <bp-button icon="person_add" (clicked)="addUserOpen = true">{{ 'settings.addUser' | translate }}</bp-button>
+        <bp-button (clicked)="addUserOpen = true">{{ 'settings.addUser' | translate }}</bp-button>
       </bp-card>
     </section>
     <bp-edit-shelter-data-modal [open]="shelterOpen" (closed)="shelterOpen = false" />

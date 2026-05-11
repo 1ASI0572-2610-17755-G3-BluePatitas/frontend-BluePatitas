@@ -14,11 +14,14 @@ import { FormFieldComponent } from '../../../shared/components/form-field/form-f
         <bp-form-field label="Zone name" />
         <bp-form-field label="Temperature range" placeholder="22°C - 28°C" />
         <bp-form-field label="Humidity range" placeholder="45% - 70%" />
-        <bp-button>{{ 'common.save' | translate }}</bp-button>
+        <div class="modal-actions">
+          <bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button>
+          <bp-button>{{ 'common.save' | translate }}</bp-button>
+        </div>
       </div>
     </bp-modal>
   `,
-  styles: [`.form-grid { display: grid; gap: 12px; }`],
+  styles: [`.form-grid { display: grid; gap: 14px; } .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }`],
 })
 export class AddMonitoringZoneModalComponent {
   @Input() open = false;

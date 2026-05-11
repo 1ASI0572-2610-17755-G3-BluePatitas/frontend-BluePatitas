@@ -18,9 +18,9 @@ import { StatusChipComponent } from '../../shared/components/status-chip/status-
         <p>{{ 'dashboard.subtitle' | translate }}</p>
       </div>
       <div class="actions">
-        <bp-button icon="add" routerLink="/animals">{{ 'dashboard.addAnimal' | translate }}</bp-button>
-        <bp-button variant="secondary" icon="visibility" routerLink="/monitoring">{{ 'dashboard.viewMonitoring' | translate }}</bp-button>
-        <bp-button variant="secondary" icon="person_add" routerLink="/veterinarians">{{ 'dashboard.registerVet' | translate }}</bp-button>
+        <bp-button routerLink="/animals">{{ 'dashboard.addAnimal' | translate }}</bp-button>
+        <bp-button variant="secondary" routerLink="/monitoring">{{ 'dashboard.viewMonitoring' | translate }}</bp-button>
+        <bp-button variant="secondary" routerLink="/veterinarians">{{ 'dashboard.registerVet' | translate }}</bp-button>
       </div>
     </div>
 
@@ -62,12 +62,12 @@ import { StatusChipComponent } from '../../shared/components/status-chip/status-
     </section>
   `,
   styles: [`
-    .actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
     .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin-bottom: 24px; }
-    .metrics article { background: white; border: 1px solid var(--bp-border); border-radius: 16px; padding: 20px; box-shadow: var(--bp-shadow); }
+    .metrics article { background: white; border: 1px solid var(--bp-border); border-radius: 16px; padding: 22px 24px; box-shadow: var(--bp-shadow); min-height: 126px; display: grid; align-content: space-between; }
     .metrics .critical { border-color: rgba(217, 48, 37, .35); background: rgba(217, 48, 37, .04); }
     small { display: block; color: var(--bp-slate-gray); font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
-    .metrics strong { display: block; margin-top: 10px; font-size: 38px; }
+    .metrics strong { display: block; margin-top: 10px; font-size: 40px; line-height: 1; }
     .critical strong { color: var(--bp-critical); }
     .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .dashboard-grid bp-card:first-child { grid-row: span 2; }

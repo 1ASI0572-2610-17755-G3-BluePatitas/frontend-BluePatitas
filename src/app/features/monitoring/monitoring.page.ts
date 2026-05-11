@@ -17,7 +17,7 @@ import { AddMonitoringZoneModalComponent } from './components/add-monitoring-zon
         <h1>{{ 'monitoring.title' | translate }}</h1>
         <p>{{ 'monitoring.subtitle' | translate }}</p>
       </div>
-      <bp-button icon="add_location_alt" (clicked)="zoneOpen = true">{{ 'monitoring.addZone' | translate }}</bp-button>
+      <bp-button (clicked)="zoneOpen = true">{{ 'monitoring.addZone' | translate }}</bp-button>
     </div>
 
     <section class="monitoring-grid">

@@ -78,6 +78,7 @@
   "settings.title": "Configuración",
   "settings.subtitle": "Gestiona refugio, usuarios, solicitudes y dispositivos IoT.",
   "settings.editShelter": "Editar datos del refugio",
+  "settings.usersPermissions": "Usuarios y permisos",
   "settings.addUser": "Agregar usuario",
   "settings.editUser": "Editar usuario",
   "settings.accessRequests": "Solicitudes de acceso",

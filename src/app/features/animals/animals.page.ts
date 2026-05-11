@@ -17,7 +17,7 @@ import { AddAnimalModalComponent, AssignDietModalComponent, ViewReportsModalComp
         <h1>{{ 'animals.title' | translate }}</h1>
         <p>{{ 'animals.subtitle' | translate }}</p>
       </div>
-      <bp-button icon="add" (clicked)="addOpen = true">{{ 'animals.add' | translate }}</bp-button>
+      <bp-button (clicked)="addOpen = true">{{ 'animals.add' | translate }}</bp-button>
     </div>
     <section class="animals-grid">
       @for (animal of animals; track animal.id) {
@@ -29,7 +29,7 @@ import { AddAnimalModalComponent, AssignDietModalComponent, ViewReportsModalComp
     <bp-assign-diet-modal [open]="dietOpen" (closed)="dietOpen = false" />
     <bp-view-reports-modal [open]="reportsOpen" [reports]="reports" (closed)="reportsOpen = false" />
   `,
-  styles: [`.animals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }`],
+  styles: [`.animals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)); gap: 16px; }`],
 })
 export class AnimalsPage implements OnInit {
   animals: Animal[] = [];

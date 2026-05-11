@@ -27,8 +27,8 @@ import { StatusChipComponent } from '../../../shared/components/status-chip/stat
           <p>{{ animal.notes }}</p>
         </section>
         <footer>
-          <bp-button icon="restaurant" (clicked)="assignDiet.emit()">{{ 'animals.assignDiet' | translate }}</bp-button>
-          <bp-button variant="secondary" icon="description" (clicked)="viewReports.emit()">{{ 'animals.viewReports' | translate }}</bp-button>
+          <bp-button (clicked)="assignDiet.emit()">{{ 'animals.assignDiet' | translate }}</bp-button>
+          <bp-button variant="secondary" (clicked)="viewReports.emit()">{{ 'animals.viewReports' | translate }}</bp-button>
         </footer>
       </aside>
     }

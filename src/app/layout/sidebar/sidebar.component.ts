@@ -1,18 +1,16 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 interface NavItem {
   labelKey: string;
-  icon: string;
   path: string;
 }
 
 @Component({
   selector: 'bp-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, MatIconModule, TranslatePipe],
+  imports: [RouterLink, RouterLinkActive, TranslatePipe],
   template: `
     <aside>
       <div class="brand">
@@ -25,7 +23,7 @@ interface NavItem {
       <nav>
         @for (item of items; track item.path) {
           <a [routerLink]="item.path" routerLinkActive="active">
-            <mat-icon>{{ item.icon }}</mat-icon>
+            <span class="nav-icon" aria-hidden="true"></span>
             {{ item.labelKey | translate }}
           </a>
         }
@@ -33,7 +31,7 @@ interface NavItem {
       <footer>
         <img src="/assets/bluepatitas/admin-avatar.png" alt="" />
         <strong>{{ 'topbar.role' | translate }}</strong>
-        <mat-icon>logout</mat-icon>
+        <span class="logout-mark" aria-hidden="true"></span>
       </footer>
     </aside>
   `,
@@ -47,17 +45,19 @@ interface NavItem {
     nav { display: grid; gap: 6px; padding: 0 16px; }
     a { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 18px; border-radius: 8px; color: var(--bp-slate-gray); font-weight: 700; }
     a.active { color: var(--bp-action-blue); background: #d6e3ff; border-left: 4px solid var(--bp-action-blue); }
+    .nav-icon { width: 18px; height: 18px; border-radius: 6px; border: 2px solid currentColor; opacity: .86; position: relative; flex: 0 0 auto; }
+    .nav-icon::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: currentColor; }
     footer { margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 20px 16px; border-top: 1px solid var(--bp-border); }
     footer img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
-    footer mat-icon { margin-left: auto; font-size: 18px; }
+    .logout-mark { margin-left: auto; width: 16px; height: 16px; border: 2px solid currentColor; border-left: 0; border-radius: 3px; opacity: .72; }
   `],
 })
 export class SidebarComponent {
   readonly items: NavItem[] = [
-    { labelKey: 'nav.dashboard', icon: 'dashboard', path: '/dashboard' },
-    { labelKey: 'nav.animals', icon: 'pets', path: '/animals' },
-    { labelKey: 'nav.monitoring', icon: 'sensors', path: '/monitoring' },
-    { labelKey: 'nav.veterinarians', icon: 'medical_services', path: '/veterinarians' },
-    { labelKey: 'nav.settings', icon: 'settings', path: '/settings' },
+    { labelKey: 'nav.dashboard', path: '/dashboard' },
+    { labelKey: 'nav.animals', path: '/animals' },
+    { labelKey: 'nav.monitoring', path: '/monitoring' },
+    { labelKey: 'nav.veterinarians', path: '/veterinarians' },
+    { labelKey: 'nav.settings', path: '/settings' },
   ];
 }

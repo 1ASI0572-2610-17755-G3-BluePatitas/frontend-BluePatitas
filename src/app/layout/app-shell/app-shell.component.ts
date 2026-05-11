@@ -22,6 +22,11 @@ import { TopbarComponent } from '../topbar/topbar.component';
     .shell { display: flex; min-height: 100vh; background: var(--bp-soft-background); }
     main { min-width: 0; flex: 1; }
     .content { padding: 0 32px 32px; }
+    @media (max-width: 760px) {
+      .shell { display: block; }
+      bp-sidebar { display: none; }
+      .content { padding: 0 18px 24px; }
+    }
   `],
 })
 export class AppShellComponent {}
