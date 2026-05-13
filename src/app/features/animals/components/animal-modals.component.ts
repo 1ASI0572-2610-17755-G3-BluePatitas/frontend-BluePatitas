@@ -34,7 +34,7 @@ import { FormFieldComponent } from '../../../shared/components/form-field/form-f
     </bp-modal>
   `,
   styles: [`
-    .animal-form { display: grid; gap: 12px; }
+    .animal-form { display: grid; gap: 12px; min-width: 0; }
     .photo-upload { display: grid; justify-items: center; gap: 8px; margin-top: -4px; }
     .photo-upload span { width: 88px; height: 88px; border-radius: 50%; border: 1px dashed #7d6b91; background: #f3eef6; position: relative; }
     .photo-upload span::before { content: '+'; position: absolute; inset: 0; display: grid; place-items: center; color: #7d6b91; font-size: 28px; font-weight: 700; }
@@ -43,8 +43,9 @@ import { FormFieldComponent } from '../../../shared/components/form-field/form-f
     .segmented { display: grid; grid-template-columns: 1fr 1fr; border-radius: 10px; background: #eee8ef; padding: 4px; }
     .segmented button { min-height: 32px; border: 0; border-radius: 7px; background: transparent; color: var(--bp-slate-gray); cursor: pointer; }
     .segmented .active { background: #fff; color: var(--bp-action-blue); box-shadow: 0 1px 4px rgba(11,31,47,.08); }
-    .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .modal-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; }
+    .two-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; min-width: 0; }
+    .modal-actions { justify-content: flex-end; margin-top: 8px; }
+    @media (max-width: 520px) { .two-cols { grid-template-columns: 1fr; } }
   `],
 })
 export class AddAnimalModalComponent {
@@ -83,11 +84,11 @@ export class AddAnimalModalComponent {
   `,
   styles: [`
     .diet-form { display: grid; gap: 14px; }
-    .food-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .food-types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
     .food-types button { min-height: 56px; border: 1px solid var(--bp-border); border-radius: 12px; background: #fff; color: var(--bp-dark-navy); font-weight: 800; cursor: pointer; }
     .food-types .active { border-color: var(--bp-action-blue); background: var(--bp-surface-blue); color: var(--bp-action-blue); }
-    .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+    .two-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    .modal-actions { margin-top: 8px; }
     @media (max-width: 560px) { .food-types, .two-cols { grid-template-columns: 1fr; } }
   `],
 })
@@ -133,7 +134,8 @@ export class AssignDietModalComponent {
   `,
   styles: [`
     .reports { display: grid; gap: 16px; }
-    header, .summary, .modal-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    header, .summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .modal-actions { margin-top: 4px; }
     header h3 { margin: 2px 0 0; font-size: 22px; }
     header small, time, p, .summary span { color: var(--bp-slate-gray); }
     .range-tabs { display: inline-flex; border: 1px solid var(--bp-border); border-radius: 999px; padding: 3px; }

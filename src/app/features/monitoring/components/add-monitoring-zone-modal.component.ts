@@ -29,9 +29,9 @@ import { FormFieldComponent } from '../../../shared/components/form-field/form-f
     </bp-modal>
   `,
   styles: [`
-    .form-grid { display: grid; gap: 14px; }
-    .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+    .form-grid { display: grid; gap: 14px; min-width: 0; }
+    .two-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; min-width: 0; }
+    .modal-actions { margin-top: 8px; }
     @media (max-width: 560px) { .two-cols { grid-template-columns: 1fr; } }
   `],
 })

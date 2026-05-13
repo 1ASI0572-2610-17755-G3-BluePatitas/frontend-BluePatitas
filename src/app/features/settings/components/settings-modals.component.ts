@@ -5,12 +5,13 @@ import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.c
 import { FormFieldComponent } from '../../../shared/components/form-field/form-field.component';
 
 const modalStyles = `
-  .form-grid { display: grid; gap: 14px; }
-  .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
-  .request { display: flex; justify-content: space-between; gap: 12px; align-items: center; border: 1px solid var(--bp-border); border-radius: 12px; padding: 14px; }
+  .form-grid { display: grid; gap: 14px; min-width: 0; }
+  .two-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; min-width: 0; }
+  .modal-actions { margin-top: 8px; }
+  .request { display: flex; justify-content: space-between; gap: 12px; align-items: center; min-width: 0; border: 1px solid var(--bp-border); border-radius: 12px; padding: 14px; }
+  .request > div { min-width: 0; }
   .request p { margin: 4px 0 0; color: var(--bp-slate-gray); }
-  @media (max-width: 560px) { .two-cols, .request { grid-template-columns: 1fr; display: grid; } .modal-actions { display: grid; } }
+  @media (max-width: 560px) { .two-cols, .request { grid-template-columns: 1fr; display: grid; } }
 `;
 
 @Component({

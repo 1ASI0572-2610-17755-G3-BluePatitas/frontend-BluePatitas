@@ -37,6 +37,7 @@ interface NavItem {
     </aside>
   `,
   styles: [`
+    :host { display: block; width: 238px; max-width: 82vw; }
     aside { width: 238px; height: 100vh; position: sticky; top: 0; display: flex; flex-direction: column; background: white; border-right: 1px solid var(--bp-border); }
     .brand { display: grid; place-items: center; padding: 22px 24px 14px; }
     .brand span { display: grid; place-items: center; width: 92px; height: 92px; border-radius: 50%; background: var(--bp-dark-navy); overflow: hidden; }
@@ -60,6 +61,9 @@ interface NavItem {
     footer { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-top: 1px solid var(--bp-border); font-size: 13px; }
     footer img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
     .logout-mark { margin-left: auto; width: 16px; height: 16px; border: 2px solid currentColor; border-left: 0; border-radius: 3px; opacity: .72; }
+    @media (max-width: 920px) {
+      aside { width: min(238px, 82vw); position: relative; }
+    }
   `],
 })
 export class SidebarComponent {

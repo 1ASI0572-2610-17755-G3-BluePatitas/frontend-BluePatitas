@@ -21,12 +21,14 @@ import { TopbarComponent } from '../topbar/topbar.component';
   `,
   styles: [`
     .shell { display: flex; min-height: 100vh; background: var(--bp-soft-background); overflow-x: clip; }
-    main { min-width: 0; flex: 1; }
-    .content { width: min(100%, 1180px); padding: 0 32px 32px; }
+    .shell-sidebar { flex: 0 0 238px; }
+    main { min-width: 0; flex: 1 1 auto; width: calc(100vw - 238px); overflow-x: clip; }
+    .content { width: 100%; max-width: none; margin: 0; padding: 0 32px 32px; overflow-x: clip; }
     .drawer-backdrop { display: none; }
 
     @media (max-width: 920px) {
       .shell { display: block; }
+      main { width: 100%; }
       .shell-sidebar { position: fixed; inset: 0 auto 0 0; z-index: 60; transform: translateX(-104%); transition: transform .22s ease; }
       .drawer-open .shell-sidebar { transform: translateX(0); }
       .drawer-backdrop { position: fixed; inset: 0; z-index: 50; border: 0; background: rgba(11, 31, 47, .42); cursor: pointer; }
