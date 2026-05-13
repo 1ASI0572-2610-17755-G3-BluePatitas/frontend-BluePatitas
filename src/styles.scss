@@ -8,6 +8,7 @@
 html,
 body {
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -15,6 +16,8 @@ body {
   background: var(--bp-soft-background);
   color: var(--bp-dark-navy);
   font-family: var(--bp-ui-font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 h1,
@@ -52,8 +55,8 @@ textarea {
 }
 
 .mat-mdc-text-field-wrapper {
-  border-radius: 15px !important;
-  background: var(--bp-surface-blue) !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
 }
 
 .mat-mdc-form-field-outline,
@@ -68,14 +71,15 @@ textarea {
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .page-title h1 {
   color: var(--bp-action-blue);
-  font-size: 32px;
+  font-size: 30px;
   line-height: 1.2;
   margin: 0;
+  font-weight: 800;
 }
 
 .page-title p {
@@ -90,4 +94,74 @@ textarea {
 
 .muted {
   color: var(--bp-slate-gray);
+}
+
+.surface-card {
+  background: var(--bp-white);
+  border: 1px solid var(--bp-border);
+  border-radius: 12px;
+  box-shadow: var(--bp-shadow);
+}
+
+.search-filter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 16px;
+  background: #fff;
+  border: 1px solid var(--bp-border);
+  border-radius: 10px;
+  color: var(--bp-slate-gray);
+}
+
+.search-box::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-shadow: 6px 6px 0 -4px currentColor;
+  flex: 0 0 auto;
+}
+
+.search-box input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--bp-dark-navy);
+  background: transparent;
+}
+
+.filter-select {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--bp-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--bp-slate-gray);
+}
+
+@media (max-width: 760px) {
+  .page-header {
+    display: grid;
+    align-items: start;
+  }
+
+  .page-title h1 {
+    font-size: 28px;
+  }
+
+  .search-filter {
+    grid-template-columns: 1fr;
+  }
 }

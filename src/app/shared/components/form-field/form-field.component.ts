@@ -9,7 +9,11 @@ import { MatInputModule } from '@angular/material/input';
   template: `
     <mat-form-field appearance="outline">
       <mat-label>{{ label }}</mat-label>
-      <input matInput [type]="type" [placeholder]="placeholder" />
+      @if (multiline) {
+        <textarea matInput [placeholder]="placeholder" rows="4"></textarea>
+      } @else {
+        <input matInput [type]="type" [placeholder]="placeholder" />
+      }
     </mat-form-field>
   `,
   styles: [`
@@ -23,4 +27,5 @@ export class FormFieldComponent {
   @Input() label = '';
   @Input() placeholder = '';
   @Input() type = 'text';
+  @Input() multiline = false;
 }

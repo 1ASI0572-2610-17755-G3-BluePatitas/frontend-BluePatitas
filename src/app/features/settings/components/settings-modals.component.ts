@@ -4,19 +4,103 @@ import { BpButtonComponent } from '../../../shared/components/bp-button/bp-butto
 import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.component';
 import { FormFieldComponent } from '../../../shared/components/form-field/form-field.component';
 
-const modalStyles = `.form-grid { display: grid; gap: 14px; } .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }`;
+const modalStyles = `
+  .form-grid { display: grid; gap: 14px; }
+  .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+  .request { display: flex; justify-content: space-between; gap: 12px; align-items: center; border: 1px solid var(--bp-border); border-radius: 12px; padding: 14px; }
+  .request p { margin: 4px 0 0; color: var(--bp-slate-gray); }
+  @media (max-width: 560px) { .two-cols, .request { grid-template-columns: 1fr; display: grid; } .modal-actions { display: grid; } }
+`;
 
-@Component({ selector: 'bp-edit-shelter-data-modal', standalone: true, imports: [TranslatePipe, BpModalComponent, FormFieldComponent, BpButtonComponent], template: `<bp-modal [open]="open" [title]="'settings.editShelter' | translate" (closed)="closed.emit()"><div class="modal-body form-grid"><bp-form-field label="Shelter name" /><bp-form-field label="Address" /><div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button><bp-button>{{ 'common.save' | translate }}</bp-button></div></div></bp-modal>`, styles: [modalStyles] })
+@Component({
+  selector: 'bp-edit-shelter-data-modal',
+  standalone: true,
+  imports: [TranslatePipe, BpModalComponent, FormFieldComponent, BpButtonComponent],
+  template: `
+    <bp-modal [open]="open" [title]="'settings.editShelter' | translate" (closed)="closed.emit()">
+      <div class="modal-body form-grid">
+        <bp-form-field [label]="'settings.shelterName' | translate" placeholder="Refugio WUF" />
+        <bp-form-field [label]="'settings.taxId' | translate" placeholder="20123456789" />
+        <bp-form-field [label]="'settings.mainAddress' | translate" placeholder="Av. Las Mascotas 123" />
+        <div class="two-cols">
+          <bp-form-field [label]="'auth.email' | translate" placeholder="admin@refugiowuf.pe" />
+          <bp-form-field [label]="'auth.phone' | translate" placeholder="+51 987 654 321" />
+        </div>
+        <div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button><bp-button>{{ 'common.save' | translate }}</bp-button></div>
+      </div>
+    </bp-modal>
+  `,
+  styles: [modalStyles],
+})
 export class EditShelterDataModalComponent { @Input() open = false; @Output() closed = new EventEmitter<void>(); }
 
-@Component({ selector: 'bp-add-user-modal', standalone: true, imports: [TranslatePipe, BpModalComponent, FormFieldComponent, BpButtonComponent], template: `<bp-modal [open]="open" [title]="'settings.addUser' | translate" (closed)="closed.emit()"><div class="modal-body form-grid"><bp-form-field label="Name" /><bp-form-field label="Email" /><bp-form-field label="Role" /><div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button><bp-button>{{ 'common.save' | translate }}</bp-button></div></div></bp-modal>`, styles: [modalStyles] })
+@Component({
+  selector: 'bp-add-user-modal',
+  standalone: true,
+  imports: [TranslatePipe, BpModalComponent, FormFieldComponent, BpButtonComponent],
+  template: `
+    <bp-modal [open]="open" [title]="'settings.addUser' | translate" (closed)="closed.emit()">
+      <div class="modal-body form-grid">
+        <bp-form-field [label]="'settings.userName' | translate" placeholder="Maria Herrera" />
+        <bp-form-field [label]="'auth.email' | translate" placeholder="maria@refugiowuf.pe" />
+        <div class="two-cols"><bp-form-field [label]="'settings.role' | translate" placeholder="Caretaker" /><bp-form-field [label]="'common.status' | translate" placeholder="Active" /></div>
+        <div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button><bp-button>{{ 'settings.inviteUser' | translate }}</bp-button></div>
+      </div>
+    </bp-modal>
+  `,
+  styles: [modalStyles],
+})
 export class AddUserModalComponent { @Input() open = false; @Output() closed = new EventEmitter<void>(); }
 
-@Component({ selector: 'bp-edit-user-modal', standalone: true, imports: [TranslatePipe, BpModalComponent, FormFieldComponent, BpButtonComponent], template: `<bp-modal [open]="open" [title]="'settings.editUser' | translate" (closed)="closed.emit()"><div class="modal-body form-grid"><bp-form-field label="Name" /><bp-form-field label="Role" /><div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button><bp-button>{{ 'common.save' | translate }}</bp-button></div></div></bp-modal>`, styles: [modalStyles] })
+@Component({
+  selector: 'bp-edit-user-modal',
+  standalone: true,
+  imports: [TranslatePipe, BpModalComponent, FormFieldComponent, BpButtonComponent],
+  template: `
+    <bp-modal [open]="open" [title]="'settings.editUser' | translate" (closed)="closed.emit()">
+      <div class="modal-body form-grid">
+        <bp-form-field [label]="'settings.userName' | translate" placeholder="Elena Ramos" />
+        <div class="two-cols"><bp-form-field [label]="'settings.role' | translate" placeholder="Veterinarian" /><bp-form-field [label]="'common.status' | translate" placeholder="Active" /></div>
+        <div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button><bp-button>{{ 'common.save' | translate }}</bp-button></div>
+      </div>
+    </bp-modal>
+  `,
+  styles: [modalStyles],
+})
 export class EditUserModalComponent { @Input() open = false; @Output() closed = new EventEmitter<void>(); }
 
-@Component({ selector: 'bp-access-requests-modal', standalone: true, imports: [TranslatePipe, BpModalComponent, BpButtonComponent], template: `<bp-modal [open]="open" [title]="'settings.accessRequests' | translate" (closed)="closed.emit()"><div class="modal-body form-grid"><p class="muted">2 pending veterinarian access requests.</p><div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button><bp-button>{{ 'common.save' | translate }}</bp-button></div></div></bp-modal>`, styles: [modalStyles] })
+@Component({
+  selector: 'bp-access-requests-modal',
+  standalone: true,
+  imports: [TranslatePipe, BpModalComponent, BpButtonComponent],
+  template: `
+    <bp-modal [open]="open" [title]="'settings.accessRequests' | translate" (closed)="closed.emit()">
+      <div class="modal-body form-grid">
+        <article class="request"><div><strong>Dra. Sofia Marin</strong><p>Veterinarian · sofia&#64;bluepatitas.app</p></div><bp-button>{{ 'settings.approve' | translate }}</bp-button></article>
+        <article class="request"><div><strong>Care Operations</strong><p>Caretaker · care.ops&#64;refugiowuf.pe</p></div><bp-button variant="secondary">{{ 'settings.review' | translate }}</bp-button></article>
+        <div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.close' | translate }}</bp-button></div>
+      </div>
+    </bp-modal>
+  `,
+  styles: [modalStyles],
+})
 export class AccessRequestsModalComponent { @Input() open = false; @Output() closed = new EventEmitter<void>(); }
 
-@Component({ selector: 'bp-add-iot-device-modal', standalone: true, imports: [TranslatePipe, BpModalComponent, FormFieldComponent, BpButtonComponent], template: `<bp-modal [open]="open" [title]="'settings.addDevice' | translate" (closed)="closed.emit()"><div class="modal-body form-grid"><bp-form-field label="Device name" /><bp-form-field label="Device type" /><bp-form-field label="Monitoring zone" /><div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button><bp-button>{{ 'common.save' | translate }}</bp-button></div></div></bp-modal>`, styles: [modalStyles] })
+@Component({
+  selector: 'bp-add-iot-device-modal',
+  standalone: true,
+  imports: [TranslatePipe, BpModalComponent, FormFieldComponent, BpButtonComponent],
+  template: `
+    <bp-modal [open]="open" [title]="'settings.addDevice' | translate" (closed)="closed.emit()">
+      <div class="modal-body form-grid">
+        <bp-form-field [label]="'settings.deviceName' | translate" placeholder="Camera Patio 1" />
+        <div class="two-cols"><bp-form-field [label]="'settings.deviceType' | translate" placeholder="Camera" /><bp-form-field [label]="'settings.deviceModel' | translate" placeholder="CAM-01-A" /></div>
+        <bp-form-field [label]="'settings.assignment' | translate" placeholder="Puppy Zone" />
+        <div class="modal-actions"><bp-button variant="secondary" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button><bp-button>{{ 'settings.registerDevice' | translate }}</bp-button></div>
+      </div>
+    </bp-modal>
+  `,
+  styles: [modalStyles],
+})
 export class AddIoTDeviceModalComponent { @Input() open = false; @Output() closed = new EventEmitter<void>(); }
