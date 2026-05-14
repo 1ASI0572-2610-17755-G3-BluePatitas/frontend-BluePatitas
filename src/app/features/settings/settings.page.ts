@@ -22,7 +22,7 @@ import { AccessRequestsModalComponent, AddIoTDeviceModalComponent, AddUserModalC
         <header>
           <span class="card-icon"></span>
           <h2>{{ 'settings.shelterData' | translate }}</h2>
-          <button type="button" (click)="shelterOpen = true">✎ {{ 'settings.editData' | translate }}</button>
+          <button type="button" (click)="shelterOpen = true"><span class="edit-icon"></span>{{ 'settings.editData' | translate }}</button>
         </header>
         <dl>
           <dt>{{ 'settings.legalName' | translate }}</dt><dd>{{ shelter?.name }}</dd>
@@ -46,7 +46,7 @@ import { AccessRequestsModalComponent, AddIoTDeviceModalComponent, AddUserModalC
               <span>{{ device.id.toUpperCase() }}</span>
               <span>{{ device.zoneId }}</span>
               <bp-status-chip [status]="device.status" />
-              <button type="button" aria-label="More actions">⋮</button>
+              <button class="more-action" type="button" aria-label="More actions"><span></span></button>
             </article>
           }
         </div>
@@ -73,7 +73,7 @@ import { AccessRequestsModalComponent, AddIoTDeviceModalComponent, AddUserModalC
             <span class="role">{{ user.role }}</span>
             <span>{{ user.id === 'user-1' ? '2 h ago' : user.id === 'user-2' ? 'Yesterday' : '3 days ago' }}</span>
             <bp-status-chip [status]="user.status" />
-            <button type="button" (click)="userOpen = true" [attr.aria-label]="'common.edit' | translate">✎</button>
+            <button class="edit-action" type="button" (click)="userOpen = true" [attr.aria-label]="'common.edit' | translate"><span></span></button>
           </article>
         }
       </div>
@@ -94,7 +94,10 @@ import { AccessRequestsModalComponent, AddIoTDeviceModalComponent, AddUserModalC
     .card-icon::before { content: ''; position: absolute; inset: 12px; border: 2px solid var(--bp-action-blue); border-radius: 3px; }
     .card-icon.device::before { border-radius: 50%; }
     .card-icon.users::before { border-radius: 50%; box-shadow: 10px 4px 0 -4px var(--bp-action-blue); }
-    .shelter-card header button { margin-left: auto; border: 0; background: transparent; color: var(--bp-action-blue); font-weight: 800; cursor: pointer; }
+    .shelter-card header button { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: var(--bp-action-blue); font-weight: 800; cursor: pointer; }
+    .edit-icon { width: 14px; height: 14px; position: relative; color: currentColor; }
+    .edit-icon::before { content: ''; position: absolute; left: 2px; top: 8px; width: 9px; height: 4px; border: 2px solid currentColor; border-top: 0; transform: rotate(-45deg); }
+    .edit-icon::after { content: ''; position: absolute; left: 8px; top: 1px; width: 4px; height: 9px; border-radius: 2px; background: currentColor; transform: rotate(45deg); }
     dl { display: grid; gap: 10px; margin: 22px 0 0; }
     dt { color: var(--bp-slate-gray); text-transform: uppercase; font-size: 11px; }
     dd { margin: -6px 0 6px; padding-bottom: 10px; border-bottom: 1px solid var(--bp-border); }
@@ -105,7 +108,12 @@ import { AccessRequestsModalComponent, AddIoTDeviceModalComponent, AddUserModalC
     .device-table .table-head, .device-table article { grid-template-columns: 1fr 1fr 1.2fr 100px 52px; }
     .users-table .table-head, .users-table article { grid-template-columns: minmax(220px, 1.4fr) 1fr 1fr 110px 70px; }
     .table-head { color: var(--bp-slate-gray); font-size: 12px; }
-    .device-table button, .users-table button { border: 0; background: transparent; font-size: 20px; color: #344454; cursor: pointer; }
+    .device-table button, .users-table button { width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #344454; cursor: pointer; }
+    .device-table button span, .users-table button span { width: 16px; height: 16px; position: relative; color: currentColor; }
+    .device-table button span::before, .device-table button span::after, .users-table button span::before, .users-table button span::after { content: ''; position: absolute; box-sizing: border-box; }
+    .more-action span::before { left: 7px; top: 1px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; box-shadow: 0 6px 0 currentColor, 0 12px 0 currentColor; }
+    .edit-action span::before { left: 3px; top: 9px; width: 10px; height: 4px; border: 2px solid currentColor; border-top: 0; transform: rotate(-45deg); }
+    .edit-action span::after { left: 9px; top: 2px; width: 4px; height: 9px; border-radius: 2px; background: currentColor; transform: rotate(45deg); }
     .users-card p { margin: 4px 0 0; color: var(--bp-slate-gray); font-size: 12px; }
     .user-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
     .badge { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--bp-critical); color: #fff; font-size: 11px; margin-left: 4px; }

@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Output } from '@angular/core';
+import { Router } from '@angular/router';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
@@ -32,7 +33,9 @@ interface NavItem {
       <footer>
         <img src="/assets/bluepatitas/admin-avatar.png" alt="" />
         <strong>{{ 'topbar.role' | translate }}</strong>
-        <span class="logout-mark" aria-hidden="true"></span>
+        <button type="button" (click)="logout()" [attr.aria-label]="'common.logout' | translate">
+          <span class="logout-mark" aria-hidden="true"></span>
+        </button>
       </footer>
     </aside>
   `,
@@ -60,6 +63,8 @@ interface NavItem {
     .settings::after { left: 7px; top: 7px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; box-shadow: 0 -8px 0 -1px currentColor, 0 8px 0 -1px currentColor, -8px 0 0 -1px currentColor, 8px 0 0 -1px currentColor; }
     footer { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-top: 1px solid var(--bp-border); font-size: 13px; }
     footer img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+    footer button { margin-left: auto; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: currentColor; cursor: pointer; }
+    footer button:hover { background: var(--bp-surface-blue); color: var(--bp-action-blue); }
     .logout-mark { margin-left: auto; width: 16px; height: 16px; border: 2px solid currentColor; border-left: 0; border-radius: 3px; opacity: .72; }
     @media (max-width: 920px) {
       aside { width: min(238px, 82vw); position: relative; }
@@ -67,6 +72,8 @@ interface NavItem {
   `],
 })
 export class SidebarComponent {
+  constructor(private readonly router: Router) {}
+
   @Output() navigate = new EventEmitter<void>();
 
   readonly items: NavItem[] = [
@@ -76,4 +83,9 @@ export class SidebarComponent {
     { labelKey: 'nav.veterinarians', path: '/veterinarians', icon: 'veterinarians' },
     { labelKey: 'nav.settings', path: '/settings', icon: 'settings' },
   ];
+
+  logout(): void {
+    this.navigate.emit();
+    void this.router.navigateByUrl('/login');
+  }
 }

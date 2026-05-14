@@ -39,15 +39,17 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
       @for (vet of filteredVets; track vet.id; let index = $index) {
         <article class="vet-row">
           <div class="identity">
-            <span class="avatar">{{ initials(vet.name) }}</span>
+            <span class="avatar" [class.has-image]="vet.avatarUrl">
+              @if (vet.avatarUrl) { <img [src]="vet.avatarUrl" [alt]="vet.name" /> } @else { {{ initials(vet.name) }} }
+            </span>
             <div><strong>{{ vet.name }}</strong><small>{{ vet.email }}</small></div>
           </div>
           <span>{{ vet.specialty }}</span>
           <b class="count">{{ assignedCount(index) }}</b>
           <bp-status-chip [status]="vet.status" />
           <div class="row-actions">
-            <button type="button" (click)="editOpen = true" [attr.aria-label]="'common.edit' | translate">✎</button>
-            <button type="button" aria-label="Delete">⌫</button>
+            <button class="edit-action" type="button" (click)="openEdit(vet)" [attr.aria-label]="'common.edit' | translate"><span></span></button>
+            <button class="mail-action" type="button" [attr.aria-label]="'auth.email' | translate"><span></span></button>
           </div>
         </article>
       }
@@ -55,7 +57,7 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
     </section>
 
     <bp-add-veterinarian-modal [open]="addOpen" (closed)="addOpen = false" />
-    <bp-edit-veterinarian-modal [open]="editOpen" (closed)="editOpen = false" />
+    <bp-edit-veterinarian-modal [open]="editOpen" [vet]="selectedVet" (closed)="editOpen = false" />
   `,
   styles: [`
     .vet-table { overflow: hidden; }
@@ -63,13 +65,20 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
     .table-head { background: #f0f9ff; color: var(--bp-slate-gray); font-size: 12px; font-weight: 800; border-bottom: 1px solid var(--bp-border); }
     .vet-row { border-bottom: 1px solid var(--bp-border); background: #fff; }
     .identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
-    .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--bp-primary-blue); border: 1px solid var(--bp-border); color: #315b76; font-weight: 800; flex: 0 0 auto; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--bp-primary-blue); border: 1px solid var(--bp-border); color: #315b76; font-weight: 800; flex: 0 0 auto; overflow: hidden; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
     strong, small { display: block; min-width: 0; overflow-wrap: anywhere; }
     strong { color: var(--bp-action-blue); }
     small { color: var(--bp-slate-gray); font-size: 12px; margin-top: 3px; }
     .count { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--bp-surface-blue); color: var(--bp-action-blue); font-size: 12px; }
     .row-actions { display: flex; gap: 12px; }
-    .row-actions button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: #344454; cursor: pointer; font-size: 18px; }
+    .row-actions button { width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #344454; cursor: pointer; }
+    .row-actions button span { width: 16px; height: 16px; position: relative; color: currentColor; }
+    .row-actions button span::before, .row-actions button span::after { content: ''; position: absolute; box-sizing: border-box; }
+    .edit-action span::before { left: 3px; top: 9px; width: 10px; height: 4px; border: 2px solid currentColor; border-top: 0; transform: rotate(-45deg); }
+    .edit-action span::after { left: 9px; top: 2px; width: 4px; height: 9px; border-radius: 2px; background: currentColor; transform: rotate(45deg); }
+    .mail-action span::before { inset: 3px 1px; border: 2px solid currentColor; border-radius: 2px; }
+    .mail-action span::after { left: 2px; right: 2px; top: 5px; height: 8px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); }
     footer { padding: 14px 20px; color: var(--bp-slate-gray); font-size: 12px; }
     @media (max-width: 880px) {
       .table-head { display: none; }
@@ -85,6 +94,7 @@ export class VeterinariansPage implements OnInit {
   statusFilter = 'all';
   addOpen = false;
   editOpen = false;
+  selectedVet?: Veterinarian;
 
   constructor(private readonly getVeterinarians: GetVeterinariansUseCase) {}
 
@@ -107,5 +117,10 @@ export class VeterinariansPage implements OnInit {
 
   assignedCount(index: number): number {
     return [12, 8, 15, 5][index] ?? 6;
+  }
+
+  openEdit(vet: Veterinarian): void {
+    this.selectedVet = vet;
+    this.editOpen = true;
   }
 }

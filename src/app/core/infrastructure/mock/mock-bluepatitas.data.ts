@@ -13,8 +13,8 @@ export const mockShelter: Shelter = {
 };
 
 export const mockZones: MonitoringZone[] = [
-  { id: 'puppies', name: 'Puppy Zone', temperatureC: 24, humidity: 45, status: 'Active', animalCount: 2, cameraEnabled: true },
-  { id: 'quarantine', name: 'Quarantine Zone', temperatureC: 28, humidity: 60, status: 'Warning', animalCount: 1, cameraEnabled: true },
+  { id: 'puppies', name: 'Puppy Zone', temperatureC: 24, humidity: 45, status: 'Active', animalCount: 2, cameraEnabled: true, imageUrl: `${assetPath}monitoring-zone-dogs.png` },
+  { id: 'quarantine', name: 'Quarantine Zone', temperatureC: 28, humidity: 60, status: 'Warning', animalCount: 1, cameraEnabled: true, imageUrl: `${assetPath}monitoring-zone-cats.png` },
   { id: 'recovery', name: 'Recovery Zone', temperatureC: null, humidity: null, status: 'Disconnected', animalCount: 3, cameraEnabled: false },
 ];
 
@@ -52,8 +52,8 @@ export const mockFeedingEvents: FeedingEvent[] = [
 ];
 
 export const mockVeterinarians: Veterinarian[] = [
-  { id: 'vet-1', name: 'Dra. Elena Ramos', specialty: 'Internal medicine', phone: '+51 900 111 222', email: 'elena@bluepatitas.app', status: 'Active' },
-  { id: 'vet-2', name: 'Dr. Carlos Vega', specialty: 'Emergency care', phone: '+51 900 333 444', email: 'carlos@bluepatitas.app', status: 'Active' },
+  { id: 'vet-1', name: 'Dra. Elena Ramos', specialty: 'Internal medicine', phone: '+51 900 111 222', email: 'elena@bluepatitas.app', status: 'Active', avatarUrl: `${assetPath}veterinarian-elena-ramos.png` },
+  { id: 'vet-2', name: 'Dr. Carlos Vega', specialty: 'Emergency care', phone: '+51 900 333 444', email: 'carlos@bluepatitas.app', status: 'Active', avatarUrl: `${assetPath}veterinarian-carlos-vega.png` },
   { id: 'vet-3', name: 'Dra. Laura Montes', specialty: 'Nutrition', phone: '+51 900 555 666', email: 'laura@bluepatitas.app', status: 'Warning' },
 ];
 

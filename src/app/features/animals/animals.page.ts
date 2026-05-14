@@ -59,7 +59,7 @@ import { AddAnimalModalComponent, AssignDietModalComponent, ViewReportsModalComp
   `,
   styles: [`
     .animals-layout, .page-header, .search-filter { transition: padding-right .18s ease; }
-    .animals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 18px; align-items: start; }
+    .animals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 18px; align-items: start; }
     @media (min-width: 1180px) {
       .animals-layout.has-panel, .page-header.has-panel, .search-filter.has-panel { padding-right: 350px; }
     }

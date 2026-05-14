@@ -20,6 +20,7 @@ export interface MonitoringZone {
   status: 'Active' | 'Warning' | 'Disconnected';
   animalCount: number;
   cameraEnabled: boolean;
+  imageUrl?: string;
 }
 
 export interface Animal {
@@ -81,6 +82,7 @@ export interface Veterinarian {
   phone: string;
   email: string;
   status: 'Active' | 'Warning';
+  avatarUrl?: string;
 }
 
 export interface User {
