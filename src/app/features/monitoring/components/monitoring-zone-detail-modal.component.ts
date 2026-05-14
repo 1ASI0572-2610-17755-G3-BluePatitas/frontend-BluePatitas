@@ -41,10 +41,10 @@ import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.c
               <p>{{ 'monitoring.stable' | translate }}</p>
             </article>
             <article>
-              <span class="mini-icon sound"></span>
-              <small>{{ 'monitoring.noiseLevel' | translate }}</small>
-              <strong>45 dB</strong>
-              <p>{{ 'monitoring.quiet' | translate }}</p>
+              <span class="mini-icon visual"></span>
+              <small>{{ 'monitoring.visualStatus' | translate }}</small>
+              <strong>{{ 'monitoring.inRange' | translate }}</strong>
+              <p></p>
             </article>
             <article>
               <span class="mini-icon occupancy"></span>
@@ -86,8 +86,8 @@ import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.c
     .temp::before { left: 6px; top: 1px; width: 4px; height: 11px; border: 2px solid currentColor; border-radius: 999px; }
     .temp::after { left: 4px; bottom: 1px; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
     .humidity::before { inset: 2px 4px; border: 2px solid currentColor; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
-    .sound::before { left: 2px; top: 5px; width: 7px; height: 6px; border-left: 3px solid currentColor; border-radius: 2px; }
-    .sound::after { left: 8px; top: 3px; width: 6px; height: 10px; border-right: 2px solid currentColor; border-radius: 50%; }
+    .visual::before { left: 4px; top: 2px; width: 8px; height: 8px; border: 2px solid currentColor; border-radius: 1px; }
+    .visual::after { left: 2px; top: 11px; width: 12px; height: 2px; background: currentColor; }
     .occupancy::before { left: 2px; top: 3px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 7px 0 0 currentColor; }
     .occupancy::after { left: 0; top: 10px; width: 15px; height: 5px; border: 2px solid currentColor; border-top: 0; border-radius: 0 0 8px 8px; }
     .progress { height: 5px; margin-top: 8px; border-radius: 999px; background: #d2cbd7; overflow: hidden; }

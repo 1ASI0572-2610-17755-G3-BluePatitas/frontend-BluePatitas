@@ -22,7 +22,7 @@ import { SupportedLanguage, TranslationService } from '../../core/i18n/translati
         <mat-label>{{ 'common.language' | translate }}</mat-label>
         <mat-select [ngModel]="currentLanguage" (ngModelChange)="setLanguage($event)">
           <mat-option value="en-US">English</mat-option>
-          <mat-option value="es-419">Español LATAM</mat-option>
+          <mat-option value="es-419">Español</mat-option>
         </mat-select>
       </mat-form-field>
     </header>
