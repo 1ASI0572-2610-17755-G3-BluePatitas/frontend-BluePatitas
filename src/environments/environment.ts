@@ -7,5 +7,5 @@
 export const environment = {
   production: false,
   /** Base URL of the BluePatitas Spring Boot backend (no trailing slash). */
-  apiBaseUrl: 'http://localhost:8080',
+  apiBaseUrl: 'https://backend-bluepatitas.onrender.com',
 };
