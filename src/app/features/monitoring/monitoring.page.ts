@@ -371,80 +371,134 @@ export class MonitoringPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Fetches the latest telemetry for every zone that has a targetId.
+   * Fetches the latest telemetry and zone state from the backend.
    * If the value changed since the last poll, marks it so the flash animation triggers.
    */
   private async pollTelemetry(): Promise<void> {
     const zones = this.zones.filter((z) => z.targetId);
-    if (zones.length === 0) return;
 
     // Fetch perimeter alerts in background to keep notifications up to date
     this.getPerimeterAlerts.execute()
       .then((list) => { this.perimeterAlerts = list; })
       .catch((err) => { console.error('[Telemetry Polling] Error fetching perimeter alerts', err); });
 
-    const results = await Promise.allSettled(
-      zones.map(async (zone) => {
-        const records = await this.getTelemetry.execute(zone.targetId!);
-        if (records.length === 0) return;
+    const refreshZonesPromise = this.refreshZonesFromBackend();
+    const results = zones.length > 0
+      ? await Promise.allSettled(
+        zones.map(async (zone) => {
+          const records = await this.getTelemetry.execute(zone.targetId!);
+          if (records.length === 0) return;
 
-        const latestVal = records[records.length - 1];
-        let latestTemp: number | null = null;
-        let latestHum: number | null = null;
-        let latestRecordTime: string | null = null;
+          const latestVal = records[records.length - 1];
+          let latestTemp: number | null = null;
+          let latestHum: number | null = null;
+          let latestRecordTime: string | null = null;
 
-        for (let i = records.length - 1; i >= 0; i--) {
-          const rec = records[i];
-          if (latestTemp === null && rec.ambientTemperature !== null && rec.ambientTemperature !== undefined) {
-            latestTemp = rec.ambientTemperature;
-            if (!latestRecordTime) {
-              latestRecordTime = rec.recordedAt;
+          for (let i = records.length - 1; i >= 0; i--) {
+            const rec = records[i];
+            if (latestTemp === null && rec.ambientTemperature !== null && rec.ambientTemperature !== undefined) {
+              latestTemp = rec.ambientTemperature;
+              if (!latestRecordTime) {
+                latestRecordTime = rec.recordedAt;
+              }
+            }
+            if (latestHum === null && rec.ambientHumidity !== null && rec.ambientHumidity !== undefined) {
+              latestHum = rec.ambientHumidity;
+              if (!latestRecordTime) {
+                latestRecordTime = rec.recordedAt;
+              }
+            }
+            if (latestTemp !== null && latestHum !== null) {
+              break;
             }
           }
-          if (latestHum === null && rec.ambientHumidity !== null && rec.ambientHumidity !== undefined) {
-            latestHum = rec.ambientHumidity;
-            if (!latestRecordTime) {
-              latestRecordTime = rec.recordedAt;
-            }
+
+          if (latestRecordTime === null) {
+            latestRecordTime = latestVal.recordedAt;
           }
-          if (latestTemp !== null && latestHum !== null) {
-            break;
+
+          const prev = this.liveData[zone.id];
+
+          const tempChanged = !prev || prev.temperatureC !== latestTemp;
+          const humChanged  = !prev || prev.humidity      !== latestHum;
+          const anyChange   = tempChanged || humChanged;
+
+          // Update the live data record
+          this.liveData[zone.id] = {
+            temperatureC: latestTemp,
+            humidity:     latestHum,
+            updatedAt:    new Date(latestRecordTime ?? Date.now()),
+            changed:      anyChange,
+          };
+
+          // Reset the "changed" flag after one animation cycle (900ms)
+          if (anyChange) {
+            setTimeout(() => {
+              if (this.liveData[zone.id]) {
+                this.liveData[zone.id] = { ...this.liveData[zone.id], changed: false };
+              }
+            }, 900);
           }
+        })
+      )
+      : [];
+
+    const zonesRefreshed = await refreshZonesPromise;
+    const telemetrySuccess = results.some((r) => r.status === 'fulfilled');
+    const anySuccess = zonesRefreshed || telemetrySuccess;
+    this.backendOnline = anySuccess;
+    if (anySuccess) this.lastPollTime = new Date();
+    this.checkEnvironmentalAlerts();
+  }
+
+  private async refreshZonesFromBackend(): Promise<boolean> {
+    try {
+      const latestZones = await this.getZones.execute();
+      const previousById = new Map(this.zones.map((zone) => [zone.id, zone]));
+
+      this.zones = latestZones;
+
+      if (this.selectedZone) {
+        this.selectedZone = latestZones.find((zone) => zone.id === this.selectedZone?.id);
+      }
+
+      for (const zone of latestZones) {
+        const previousZone = previousById.get(zone.id);
+        const previousLive = this.liveData[zone.id];
+        const previousTemp = previousLive?.temperatureC ?? previousZone?.temperatureC ?? null;
+        const previousHum = previousLive?.humidity ?? previousZone?.humidity ?? null;
+        const hasTemperature = zone.temperatureC !== null && zone.temperatureC !== undefined;
+        const hasHumidity = zone.humidity !== null && zone.humidity !== undefined;
+
+        if (!hasTemperature && !hasHumidity) {
+          continue;
         }
 
-        if (latestRecordTime === null) {
-          latestRecordTime = latestVal.recordedAt;
-        }
+        const temperatureC = hasTemperature ? zone.temperatureC : previousLive?.temperatureC ?? null;
+        const humidity = hasHumidity ? zone.humidity : previousLive?.humidity ?? null;
+        const changed = previousTemp !== temperatureC || previousHum !== humidity;
 
-        const prev = this.liveData[zone.id];
-
-        const tempChanged = !prev || prev.temperatureC !== latestTemp;
-        const humChanged  = !prev || prev.humidity      !== latestHum;
-        const anyChange   = tempChanged || humChanged;
-
-        // Update the live data record
         this.liveData[zone.id] = {
-          temperatureC: latestTemp,
-          humidity:     latestHum,
-          updatedAt:    new Date(latestRecordTime ?? Date.now()),
-          changed:      anyChange,
+          temperatureC,
+          humidity,
+          updatedAt: changed ? new Date() : previousLive?.updatedAt ?? new Date(),
+          changed,
         };
 
-        // Reset the "changed" flag after one animation cycle (900ms)
-        if (anyChange) {
+        if (changed) {
           setTimeout(() => {
             if (this.liveData[zone.id]) {
               this.liveData[zone.id] = { ...this.liveData[zone.id], changed: false };
             }
           }, 900);
         }
-      })
-    );
+      }
 
-    const anySuccess = results.some((r) => r.status === 'fulfilled');
-    this.backendOnline = anySuccess;
-    if (anySuccess) this.lastPollTime = new Date();
-    this.checkEnvironmentalAlerts();
+      return true;
+    } catch (err) {
+      console.error('[Telemetry Polling] Error refreshing zones', err);
+      return false;
+    }
   }
 
   checkEnvironmentalAlerts(): void {

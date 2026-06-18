@@ -1,10 +1,25 @@
 import { inject, Injectable } from '@angular/core';
-import { ALERT_REPOSITORY, DEVICE_REPOSITORY, FEEDING_REPOSITORY, REPORT_REPOSITORY, SHELTER_REPOSITORY, USER_REPOSITORY, VETERINARIAN_REPOSITORY } from '../../domain/repositories/repository.tokens';
+import {
+  ALERT_REPOSITORY,
+  DEVICE_REPOSITORY,
+  FEEDING_REPOSITORY,
+  REPORT_REPOSITORY,
+  SHELTER_REPOSITORY,
+  USER_REPOSITORY,
+  VETERINARIAN_REPOSITORY,
+  AlertRepository,
+  DeviceRepository,
+  FeedingRepository,
+  ReportRepository,
+  ShelterRepository,
+  UserRepository,
+  VeterinarianRepository
+} from '../../domain/repositories/repository.tokens';
 import { Veterinarian, User, Shelter, MonitoringZone } from '../../domain/models/bluepatitas.models';
 
 @Injectable({ providedIn: 'root' })
 export class AssignDietUseCase {
-  private readonly repository = inject(FEEDING_REPOSITORY);
+  private readonly repository: FeedingRepository = inject(FEEDING_REPOSITORY);
   execute(animalId: string, planName: string) {
     return this.repository.assignDiet(animalId, planName);
   }
@@ -12,7 +27,7 @@ export class AssignDietUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class GetAlertsUseCase {
-  private readonly repository = inject(ALERT_REPOSITORY);
+  private readonly repository: AlertRepository = inject(ALERT_REPOSITORY);
   execute() {
     return this.repository.getAlerts();
   }
@@ -20,7 +35,7 @@ export class GetAlertsUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class GetMonitoringZonesUseCase {
-  private readonly repository = inject(SHELTER_REPOSITORY);
+  private readonly repository: ShelterRepository = inject(SHELTER_REPOSITORY);
   execute() {
     return this.repository.getMonitoringZones();
   }
@@ -28,7 +43,7 @@ export class GetMonitoringZonesUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class GetDevicesUseCase {
-  private readonly repository = inject(DEVICE_REPOSITORY);
+  private readonly repository: DeviceRepository = inject(DEVICE_REPOSITORY);
   execute() {
     return this.repository.getDevices();
   }
@@ -36,7 +51,7 @@ export class GetDevicesUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class GetVeterinariansUseCase {
-  private readonly repository = inject(VETERINARIAN_REPOSITORY);
+  private readonly repository: VeterinarianRepository = inject(VETERINARIAN_REPOSITORY);
   execute() {
     return this.repository.getVeterinarians();
   }
@@ -44,7 +59,7 @@ export class GetVeterinariansUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class CreateVeterinarianUseCase {
-  private readonly repository = inject(VETERINARIAN_REPOSITORY);
+  private readonly repository: VeterinarianRepository = inject(VETERINARIAN_REPOSITORY);
   execute(vet: Omit<Veterinarian, 'id'>) {
     return this.repository.createVeterinarian(vet);
   }
@@ -52,7 +67,7 @@ export class CreateVeterinarianUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class GetShelterSettingsUseCase {
-  private readonly repository = inject(SHELTER_REPOSITORY);
+  private readonly repository: ShelterRepository = inject(SHELTER_REPOSITORY);
   execute() {
     return this.repository.getShelterSettings();
   }
@@ -60,7 +75,7 @@ export class GetShelterSettingsUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class GetReportsUseCase {
-  private readonly repository = inject(REPORT_REPOSITORY);
+  private readonly repository: ReportRepository = inject(REPORT_REPOSITORY);
   execute(animalId?: string) {
     return animalId ? this.repository.getReportsByAnimal(animalId) : this.repository.getReports();
   }
@@ -68,7 +83,7 @@ export class GetReportsUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class GetUsersUseCase {
-  private readonly repository = inject(USER_REPOSITORY);
+  private readonly repository: UserRepository = inject(USER_REPOSITORY);
   execute() {
     return this.repository.getUsers();
   }
@@ -76,7 +91,7 @@ export class GetUsersUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class CreateUserUseCase {
-  private readonly repository = inject(USER_REPOSITORY);
+  private readonly repository: UserRepository = inject(USER_REPOSITORY);
   execute(user: Omit<User, 'id'>) {
     return this.repository.createUser(user);
   }
@@ -84,7 +99,7 @@ export class CreateUserUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class LoginUseCase {
-  private readonly repository = inject(USER_REPOSITORY);
+  private readonly repository: UserRepository = inject(USER_REPOSITORY);
   execute(email: string, password: string) {
     return this.repository.login(email, password);
   }
@@ -92,7 +107,7 @@ export class LoginUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class UpdateShelterSettingsUseCase {
-  private readonly repository = inject(SHELTER_REPOSITORY);
+  private readonly repository: ShelterRepository = inject(SHELTER_REPOSITORY);
   execute(shelter: Shelter) {
     return this.repository.updateShelterSettings(shelter);
   }
@@ -100,7 +115,7 @@ export class UpdateShelterSettingsUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class GetFeedingPlansUseCase {
-  private readonly repository = inject(FEEDING_REPOSITORY);
+  private readonly repository: FeedingRepository = inject(FEEDING_REPOSITORY);
   execute() {
     return this.repository.getPlans();
   }
@@ -108,7 +123,7 @@ export class GetFeedingPlansUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class GetFeedingEventsUseCase {
-  private readonly repository = inject(FEEDING_REPOSITORY);
+  private readonly repository: FeedingRepository = inject(FEEDING_REPOSITORY);
   execute() {
     return this.repository.getEvents();
   }
@@ -116,7 +131,7 @@ export class GetFeedingEventsUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class CreateMonitoringZoneUseCase {
-  private readonly repository = inject(SHELTER_REPOSITORY);
+  private readonly repository: ShelterRepository = inject(SHELTER_REPOSITORY);
   execute(zone: Omit<MonitoringZone, 'id'>) {
     return this.repository.createMonitoringZone(zone);
   }
@@ -124,7 +139,7 @@ export class CreateMonitoringZoneUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class UpdateMonitoringZoneUseCase {
-  private readonly repository = inject(SHELTER_REPOSITORY);
+  private readonly repository: ShelterRepository = inject(SHELTER_REPOSITORY);
   execute(id: string, zone: Omit<MonitoringZone, 'id'>) {
     return this.repository.updateMonitoringZone(id, zone);
   }
@@ -132,7 +147,7 @@ export class UpdateMonitoringZoneUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class DeleteMonitoringZoneUseCase {
-  private readonly repository = inject(SHELTER_REPOSITORY);
+  private readonly repository: ShelterRepository = inject(SHELTER_REPOSITORY);
   execute(id: string) {
     return this.repository.deleteMonitoringZone(id);
   }
@@ -140,7 +155,7 @@ export class DeleteMonitoringZoneUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class UpdateVeterinarianUseCase {
-  private readonly repository = inject(VETERINARIAN_REPOSITORY);
+  private readonly repository: VeterinarianRepository = inject(VETERINARIAN_REPOSITORY);
   execute(vet: Veterinarian) {
     return this.repository.updateVeterinarian(vet);
   }
@@ -148,7 +163,7 @@ export class UpdateVeterinarianUseCase {
 
 @Injectable({ providedIn: 'root' })
 export class DeleteVeterinarianUseCase {
-  private readonly repository = inject(VETERINARIAN_REPOSITORY);
+  private readonly repository: VeterinarianRepository = inject(VETERINARIAN_REPOSITORY);
   execute(id: string) {
     return this.repository.deleteVeterinarian(id);
   }
