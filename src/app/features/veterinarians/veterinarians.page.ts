@@ -29,9 +29,13 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
     </div>
 
     <section class="vet-table surface-card">
+      @if (errorMessage) {
+        <div class="error" role="alert">{{ errorMessage | translate }}</div>
+      }
       <header class="table-head">
         <span>{{ 'veterinarians.nameEmail' | translate }}</span>
-        <span>{{ 'veterinarians.specialty' | translate }}</span>
+        <span>{{ 'settings.role' | translate }}</span>
+        <span>{{ 'veterinary.shelter' | translate }}</span>
         <span>{{ 'veterinarians.assignedAnimals' | translate }}</span>
         <span>{{ 'common.status' | translate }}</span>
         <span>{{ 'common.actions' | translate }}</span>
@@ -44,8 +48,9 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
             </span>
             <div><strong>{{ vet.name }}</strong><small>{{ vet.email }}</small></div>
           </div>
-          <span>{{ vet.specialty }}</span>
-          <b class="count">{{ assignedCount(index) }}</b>
+          <span>{{ vet.role || vet.specialty }}</span>
+          <span>{{ vet.shelterName || '-' }}</span>
+          <b class="count">{{ vet.assignedAnimalsCount ?? assignedCount(index) }}</b>
           <bp-status-chip [status]="vet.status" />
           <div class="row-actions">
             <button class="edit-action" type="button" (click)="openEdit(vet)" [attr.aria-label]="'common.edit' | translate"><span></span></button>
@@ -61,7 +66,7 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
   `,
   styles: [`
     .vet-table { overflow: hidden; }
-    .table-head, .vet-row { display: grid; grid-template-columns: minmax(220px, 1.2fr) 1fr 130px 120px 110px; gap: 16px; align-items: center; padding: 14px 20px; }
+    .table-head, .vet-row { display: grid; grid-template-columns: minmax(220px, 1.2fr) .8fr 1fr 120px 110px 110px; gap: 16px; align-items: center; padding: 14px 20px; }
     .table-head { background: #f0f9ff; color: var(--bp-slate-gray); font-size: 12px; font-weight: 800; border-bottom: 1px solid var(--bp-border); }
     .vet-row { border-bottom: 1px solid var(--bp-border); background: #fff; }
     .identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -80,6 +85,7 @@ import { AddVeterinarianModalComponent, EditVeterinarianModalComponent } from '.
     .mail-action span::before { inset: 3px 1px; border: 2px solid currentColor; border-radius: 2px; }
     .mail-action span::after { left: 2px; right: 2px; top: 5px; height: 8px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); }
     footer { padding: 14px 20px; color: var(--bp-slate-gray); font-size: 12px; }
+    .error { margin: 16px 20px 0; border: 1px solid rgba(217,48,37,.24); background: rgba(217,48,37,.08); color: var(--bp-critical); border-radius: 10px; padding: 12px 14px; font-weight: 800; }
     @media (max-width: 880px) {
       .table-head { display: none; }
       .vet-row { grid-template-columns: 1fr auto; gap: 10px; }
@@ -95,6 +101,7 @@ export class VeterinariansPage implements OnInit {
   addOpen = false;
   editOpen = false;
   selectedVet?: Veterinarian;
+  errorMessage = '';
 
   constructor(private readonly getVeterinarians: GetVeterinariansUseCase) {}
 
@@ -108,7 +115,11 @@ export class VeterinariansPage implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.vets = await this.getVeterinarians.execute();
+    try {
+      this.vets = await this.getVeterinarians.execute();
+    } catch {
+      this.errorMessage = 'auth.accessDenied';
+    }
   }
 
   initials(name: string): string {

@@ -78,11 +78,16 @@ export interface FeedingEvent {
 export interface Veterinarian {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   specialty: string;
   phone: string;
   email: string;
   status: 'Active' | 'Warning';
   avatarUrl?: string;
+  role?: string;
+  shelterName?: string;
+  assignedAnimalsCount?: number;
 }
 
 export interface User {

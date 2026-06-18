@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { SupportedLanguage, TranslationService } from '../../core/i18n/translation.service';
 
@@ -15,8 +16,8 @@ import { SupportedLanguage, TranslationService } from '../../core/i18n/translati
         <span></span><span></span><span></span>
       </button>
       <div class="identity">
-        <strong>{{ 'topbar.shelter' | translate }}</strong>
-        <small>{{ 'topbar.role' | translate }}</small>
+        <strong>{{ shelterName }}</strong>
+        <small>{{ userName }} · {{ roleLabel }}</small>
       </div>
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ 'common.language' | translate }}</mat-label>
@@ -47,7 +48,10 @@ import { SupportedLanguage, TranslationService } from '../../core/i18n/translati
 export class TopbarComponent {
   @Output() menuClicked = new EventEmitter<void>();
 
-  constructor(private readonly translations: TranslationService) {}
+  constructor(
+    private readonly translations: TranslationService,
+    private readonly session: AuthSessionService,
+  ) {}
 
   get currentLanguage(): SupportedLanguage {
     return this.translations.currentLanguage();
@@ -55,5 +59,17 @@ export class TopbarComponent {
 
   setLanguage(language: SupportedLanguage): void {
     this.translations.setLanguage(language);
+  }
+
+  get shelterName(): string {
+    return this.session.currentSession?.shelterName || 'Refugio WUF';
+  }
+
+  get userName(): string {
+    return this.session.fullName();
+  }
+
+  get roleLabel(): string {
+    return this.session.roleLabel();
   }
 }

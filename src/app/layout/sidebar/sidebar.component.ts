@@ -1,12 +1,15 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthSessionService } from '../../core/auth/auth-session.service';
+import { BluePatitasRole } from '../../core/domain/models/auth.models';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 interface NavItem {
   labelKey: string;
   path: string;
   icon: 'dashboard' | 'animals' | 'monitoring' | 'veterinarians' | 'settings';
+  roles: BluePatitasRole[];
 }
 
 @Component({
@@ -19,11 +22,11 @@ interface NavItem {
         <span><img src="/assets/bluepatitas/bluepatitas-logo.png" alt="BluePatitas" /></span>
       </div>
       <section class="shelter">
-        <strong>{{ 'topbar.shelter' | translate }}</strong>
-        <small>{{ 'topbar.role' | translate }}</small>
+        <strong>{{ shelterName }}</strong>
+        <small>{{ roleLabel }}</small>
       </section>
       <nav>
-        @for (item of items; track item.path) {
+        @for (item of visibleItems; track item.path) {
           <a [routerLink]="item.path" routerLinkActive="active" (click)="navigate.emit()">
             <span class="nav-icon" [class]="item.icon" aria-hidden="true"></span>
             {{ item.labelKey | translate }}
@@ -32,7 +35,7 @@ interface NavItem {
       </nav>
       <footer>
         <img src="/assets/bluepatitas/admin-avatar.png" alt="" />
-        <strong>{{ 'topbar.role' | translate }}</strong>
+        <strong>{{ userName }}</strong>
         <button type="button" (click)="logout()" [attr.aria-label]="'common.logout' | translate">
           <span class="logout-mark" aria-hidden="true"></span>
         </button>
@@ -72,19 +75,42 @@ interface NavItem {
   `],
 })
 export class SidebarComponent {
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly session: AuthSessionService,
+  ) {}
 
   @Output() navigate = new EventEmitter<void>();
 
   readonly items: NavItem[] = [
-    { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard' },
-    { labelKey: 'nav.animals', path: '/animals', icon: 'animals' },
-    { labelKey: 'nav.monitoring', path: '/monitoring', icon: 'monitoring' },
-    { labelKey: 'nav.veterinarians', path: '/veterinarians', icon: 'veterinarians' },
-    { labelKey: 'nav.settings', path: '/settings', icon: 'settings' },
+    { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard', roles: ['SHELTER_ADMIN'] },
+    { labelKey: 'nav.animals', path: '/animals', icon: 'animals', roles: ['SHELTER_ADMIN'] },
+    { labelKey: 'nav.monitoring', path: '/monitoring', icon: 'monitoring', roles: ['SHELTER_ADMIN'] },
+    { labelKey: 'nav.veterinarians', path: '/veterinarians', icon: 'veterinarians', roles: ['SHELTER_ADMIN'] },
+    { labelKey: 'nav.settings', path: '/settings', icon: 'settings', roles: ['SHELTER_ADMIN'] },
+    { labelKey: 'nav.dashboard', path: '/veterinary/dashboard', icon: 'dashboard', roles: ['VETERINARIAN'] },
+    { labelKey: 'nav.veterinaryAnimals', path: '/veterinary/animals', icon: 'animals', roles: ['VETERINARIAN'] },
   ];
 
+  get visibleItems(): NavItem[] {
+    const role = this.session.currentSession?.role;
+    return role ? this.items.filter((item) => item.roles.includes(role)) : [];
+  }
+
+  get shelterName(): string {
+    return this.session.currentSession?.shelterName || 'Refugio WUF';
+  }
+
+  get roleLabel(): string {
+    return this.session.roleLabel();
+  }
+
+  get userName(): string {
+    return this.session.fullName();
+  }
+
   logout(): void {
+    this.session.clearSession();
     this.navigate.emit();
     void this.router.navigateByUrl('/login');
   }
