@@ -52,11 +52,14 @@ import { ApiFeedingPlan } from '../../core/domain/models/feeding-api.models';
     <bp-animal-profile-panel
       [animal]="selectedAnimal"
       [zoneName]="selectedAnimal ? zoneName(selectedAnimal.zoneId) : ''"
+      [zones]="zones"
       [activePlan]="activePlan"
       (closed)="selectedAnimal = undefined"
       (assignDiet)="dietOpen = true"
       (viewReports)="openReports()"
       (editProfile)="editOpen = true"
+      (animalUpdated)="onAnimalUpdated($event)"
+      (animalDeleted)="onAnimalDeleted($event)"
     />
     <bp-add-animal-modal [open]="addOpen" [zones]="zones" (closed)="addOpen = false" (registered)="onAnimalRegistered($event)" />
     <bp-assign-diet-modal [open]="dietOpen" [animal]="selectedAnimal" [activePlan]="activePlan" (closed)="dietOpen = false" (dietAssigned)="selectedAnimal ? loadActivePlan(selectedAnimal.id) : null" />
@@ -152,6 +155,18 @@ export class AnimalsPage implements OnInit {
     this.animals = this.animals.map(a => a.id === updatedAnimal.id ? updatedAnimal : a);
     if (this.selectedAnimal?.id === updatedAnimal.id) {
       this.selectedAnimal = updatedAnimal;
+    }
+  }
+
+  onAnimalDeleted(animalId: string): void {
+    this.animals = this.animals.filter(a => a.id !== animalId);
+    if (this.selectedAnimal?.id === animalId) {
+      this.selectedAnimal = this.animals[0] || undefined;
+      if (this.selectedAnimal) {
+        this.loadActivePlan(this.selectedAnimal.id);
+      } else {
+        this.activePlan = undefined;
+      }
     }
   }
 }

@@ -25,6 +25,9 @@ export interface MonitoringZone {
   imageUrl?: string;
   minTemperatureC?: number | null;
   maxTemperatureC?: number | null;
+  geofenceLatitude?: number | null;
+  geofenceLongitude?: number | null;
+  geofenceRadiusMeters?: number | null;
 }
 
 export interface Animal {

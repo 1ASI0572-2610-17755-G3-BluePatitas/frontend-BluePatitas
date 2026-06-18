@@ -20,6 +20,9 @@ export interface MonitoringRepository {
   /** PUT /api/monitoring/alerts/{id}/resolve — resolve an alert. */
   resolveAlert(alertId: string): Promise<PerimeterAlert>;
 
+  /** DELETE /api/monitoring/alerts/{id} — dismiss/delete an alert. */
+  dismissAlert(alertId: string): Promise<void>;
+
   // ── Telemetry ─────────────────────────────────────────────────────────────
   /** GET /api/monitoring/telemetry/{targetId} — get telemetry history. */
   getTelemetryByTarget(targetId: string): Promise<TelemetryRecord[]>;

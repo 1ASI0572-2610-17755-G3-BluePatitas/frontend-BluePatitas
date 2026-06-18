@@ -111,6 +111,17 @@ export class HttpAnimalRepository implements AnimalRepository {
     }
   }
 
+  async deleteAnimal(id: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.delete<void>(`${this.baseUrl}/${id}`)
+      );
+    } catch (error) {
+      console.error(`Failed to delete animal with id ${id} in backend`, error);
+      throw error;
+    }
+  }
+
   /**
    * Helper to upload a profile image file to the backend media endpoint.
    * Returns the relative url path (e.g. /uploads/filename.png).

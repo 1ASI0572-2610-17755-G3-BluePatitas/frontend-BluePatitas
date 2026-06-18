@@ -27,6 +27,8 @@ export interface TelemetryRecord {
   ambientTemperature: number | null;
   ambientHumidity: number | null;
   visualData: string | null;
+  latitude: number | null;
+  longitude: number | null;
   recordedAt: string; // ISO-8601 LocalDateTime serialized as string
 }
 
@@ -36,6 +38,8 @@ export interface TelemetryRequest {
   ambientTemperature: number;
   ambientHumidity: number;
   visualData?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 /** Request body for POST /api/monitoring/alerts/{targetId}/tracking */

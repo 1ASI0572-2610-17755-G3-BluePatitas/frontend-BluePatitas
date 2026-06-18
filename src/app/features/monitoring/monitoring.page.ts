@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Alert, Device, MonitoringZone } from '../../core/domain/models/bluepatitas.models';
 import { PerimeterAlert } from '../../core/domain/models/monitoring-api.models';
 import { GetAlertsUseCase, GetDevicesUseCase, GetMonitoringZonesUseCase, CreateMonitoringZoneUseCase } from '../../core/application/use-cases/bluepatitas.use-cases';
-import { GetPerimeterAlertsUseCase, EnableTrackingUseCase, ResolveAlertUseCase, GetTelemetryByTargetUseCase } from '../../core/application/use-cases/monitoring.use-cases';
+import { GetPerimeterAlertsUseCase, EnableTrackingUseCase, ResolveAlertUseCase, GetTelemetryByTargetUseCase, DismissAlertUseCase } from '../../core/application/use-cases/monitoring.use-cases';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { BpButtonComponent } from '../../shared/components/bp-button/bp-button.component';
 import { BpCardComponent } from '../../shared/components/bp-card/bp-card.component';
@@ -64,7 +64,9 @@ interface LiveZoneReading {
               @if (zone.imageUrl) {
                 <img [src]="zone.imageUrl" [alt]="zone.name" (error)="hideBrokenImage($event)" />
               }
-              <span class="live" [class.offline]="!zone.cameraEnabled">{{ zone.cameraEnabled ? 'Live' : 'Offline' }}</span>
+              @if (zone.cameraEnabled) {
+                <span class="live">Live</span>
+              }
               <b>{{ zone.name }}</b>
             </div>
             <div class="zone-metrics">
@@ -90,35 +92,35 @@ interface LiveZoneReading {
       </div>
 
       <aside class="side-stack">
-        <!-- Alerts (local mock) -->
-        <bp-card [title]="'monitoring.environmentalAlerts' | translate">
+        <!-- Notifications (combined environmental & perimeter alerts) -->
+        <bp-card title="Notificaciones">
           <div class="alert-list">
+            <!-- Environmental Alerts -->
             @for (alert of allAlerts; track alert.id) {
               <article [class.critical]="alert.severity === 'Critical'">
                 <strong>{{ ('alerts.' + alert.type) | translate }}</strong>
                 <p>{{ alert.message }}</p>
               </article>
             }
-          </div>
-        </bp-card>
 
-        <!-- Perimeter alerts (backend) -->
-        <bp-card title="Alertas de Perímetro (API)">
-          @if (apiLoading) {
-            <p class="api-status loading">⏳ Conectando…</p>
-          } @else if (apiError) {
-            <p class="api-status error">⚠️ Backend no disponible</p>
-          } @else if (perimeterAlerts.length === 0) {
-            <p class="api-status ok">✅ Sin alertas activas</p>
-          } @else {
-            <div class="alert-list">
+            <!-- Perimeter Alerts -->
+            @if (apiLoading) {
+              <p class="api-status loading">⏳ Conectando…</p>
+            } @else if (apiError) {
+              <p class="api-status error">⚠️ Backend no disponible</p>
+            } @else {
               @for (pa of perimeterAlerts; track pa.id) {
-                <article [class.critical]="pa.isBreachConfirmed && pa.trackingActive" class="perimeter-alert">
+                <article [class.critical]="pa.isBreachConfirmed && pa.trackingActive" [class.resolved]="!pa.isBreachConfirmed && !pa.trackingActive" class="perimeter-alert">
                   <div class="pa-header">
                     <strong>Brecha de Perímetro</strong>
-                    <span class="pa-badge" [class.tracking]="pa.trackingActive" [class.confirmed]="pa.isBreachConfirmed && !pa.trackingActive">
-                      {{ pa.trackingActive ? '📡 Tracking' : pa.isBreachConfirmed ? '⚠️ Confirmada' : '🔍 Sin confirmar' }}
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="pa-badge" [class.tracking]="pa.trackingActive" [class.confirmed]="pa.isBreachConfirmed && !pa.trackingActive" [class.resolved]="!pa.isBreachConfirmed && !pa.trackingActive">
+                        {{ pa.trackingActive ? '📡 Tracking' : pa.isBreachConfirmed ? '⚠️ Confirmada' : '✅ Resuelta' }}
+                      </span>
+                      @if (!pa.isBreachConfirmed && !pa.trackingActive) {
+                        <button class="dismiss-btn" (click)="dismissAlert(pa)" [disabled]="actionLoading === pa.id" title="Descartar alerta">×</button>
+                      }
+                    </div>
                   </div>
                   <p class="pa-target">Target: <code>{{ pa.targetId.slice(0, 8) }}…</code></p>
                   @if (pa.currentCoordinates) {
@@ -138,19 +140,10 @@ interface LiveZoneReading {
                   </div>
                 </article>
               }
-            </div>
-          }
-        </bp-card>
+            }
 
-        <!-- Device summary -->
-        <bp-card [title]="'monitoring.deviceStatus' | translate">
-          <div class="device-summary">
-            @for (group of deviceGroups; track group.label) {
-              <article>
-                <span class="device-icon" [class]="group.icon"></span>
-                <strong>{{ group.label }}</strong>
-                <small [class.warn]="group.warn">{{ group.value }}</small>
-              </article>
+            @if (allAlerts.length === 0 && perimeterAlerts.length === 0 && !apiLoading && !apiError) {
+              <p class="api-status ok">✅ Sin notificaciones activas</p>
             }
           </div>
         </bp-card>
@@ -161,8 +154,11 @@ interface LiveZoneReading {
     <bp-monitoring-zone-detail-modal
       [open]="!!selectedZone"
       [zone]="selectedZone"
+      [allPerimeterAlerts]="perimeterAlerts"
       (closed)="selectedZone = undefined"
-      (telemetryPosted)="onTelemetryPosted($event)" />
+      (telemetryPosted)="onTelemetryPosted($event)"
+      (zoneUpdated)="onZoneUpdated($event)"
+      (zoneDeleted)="onZoneDeleted($event)" />
   `,
   styles: [`
     /* ── Live status bar ─────────────────────────────────────────────────── */
@@ -243,10 +239,14 @@ interface LiveZoneReading {
     .api-status.ok { background: #edfdf8; color: #007a72; }
     .perimeter-alert { border-left-color: #e68a00 !important; background: #fffbea !important; }
     .perimeter-alert.critical { border-left-color: var(--bp-critical) !important; background: rgba(217,48,37,.05) !important; }
+    .perimeter-alert.resolved { border-left-color: #009b96 !important; background: #f0fdfa !important; }
     .pa-header { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
     .pa-badge { font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 999px; background: #ffefc4; color: #7a4800; white-space: nowrap; }
     .pa-badge.tracking { background: #d6f0ff; color: #005f8e; }
     .pa-badge.confirmed { background: #ffe0e0; color: #a10000; }
+    .pa-badge.resolved { background: #d8fbf4; color: #007a72; }
+    .dismiss-btn { background: transparent; border: 0; font-size: 18px; font-weight: bold; color: var(--bp-slate-gray); cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.15s; }
+    .dismiss-btn:hover { color: var(--bp-critical); }
     .pa-target, .pa-coords { margin: 4px 0 0; font-size: 11px; color: var(--bp-slate-gray); }
     .pa-target code { background: #edf3f7; border-radius: 4px; padding: 1px 4px; font-size: 10px; }
     .pa-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
@@ -307,6 +307,7 @@ export class MonitoringPage implements OnInit, OnDestroy {
     private readonly resolveAlertUseCase: ResolveAlertUseCase,
     private readonly getTelemetry: GetTelemetryByTargetUseCase,
     private readonly createZone: CreateMonitoringZoneUseCase,
+    private readonly dismissAlertUseCase: DismissAlertUseCase,
   ) {}
 
   get filteredZones(): MonitoringZone[] {
@@ -377,23 +378,55 @@ export class MonitoringPage implements OnInit, OnDestroy {
     const zones = this.zones.filter((z) => z.targetId);
     if (zones.length === 0) return;
 
+    // Fetch perimeter alerts in background to keep notifications up to date
+    this.getPerimeterAlerts.execute()
+      .then((list) => { this.perimeterAlerts = list; })
+      .catch((err) => { console.error('[Telemetry Polling] Error fetching perimeter alerts', err); });
+
     const results = await Promise.allSettled(
       zones.map(async (zone) => {
         const records = await this.getTelemetry.execute(zone.targetId!);
         if (records.length === 0) return;
 
-        const latest = records[records.length - 1];
+        const latestVal = records[records.length - 1];
+        let latestTemp: number | null = null;
+        let latestHum: number | null = null;
+        let latestRecordTime: string | null = null;
+
+        for (let i = records.length - 1; i >= 0; i--) {
+          const rec = records[i];
+          if (latestTemp === null && rec.ambientTemperature !== null && rec.ambientTemperature !== undefined) {
+            latestTemp = rec.ambientTemperature;
+            if (!latestRecordTime) {
+              latestRecordTime = rec.recordedAt;
+            }
+          }
+          if (latestHum === null && rec.ambientHumidity !== null && rec.ambientHumidity !== undefined) {
+            latestHum = rec.ambientHumidity;
+            if (!latestRecordTime) {
+              latestRecordTime = rec.recordedAt;
+            }
+          }
+          if (latestTemp !== null && latestHum !== null) {
+            break;
+          }
+        }
+
+        if (latestRecordTime === null) {
+          latestRecordTime = latestVal.recordedAt;
+        }
+
         const prev = this.liveData[zone.id];
 
-        const tempChanged = !prev || prev.temperatureC !== latest.ambientTemperature;
-        const humChanged  = !prev || prev.humidity      !== latest.ambientHumidity;
+        const tempChanged = !prev || prev.temperatureC !== latestTemp;
+        const humChanged  = !prev || prev.humidity      !== latestHum;
         const anyChange   = tempChanged || humChanged;
 
         // Update the live data record
         this.liveData[zone.id] = {
-          temperatureC: latest.ambientTemperature,
-          humidity:     latest.ambientHumidity,
-          updatedAt:    new Date(latest.recordedAt ?? Date.now()),
+          temperatureC: latestTemp,
+          humidity:     latestHum,
+          updatedAt:    new Date(latestRecordTime ?? Date.now()),
           changed:      anyChange,
         };
 
@@ -478,6 +511,20 @@ export class MonitoringPage implements OnInit, OnDestroy {
     this.zones.push(newZone);
   }
 
+  onZoneUpdated(updated: MonitoringZone): void {
+    this.zones = this.zones.map((z) => (z.id === updated.id ? updated : z));
+    if (this.selectedZone && this.selectedZone.id === updated.id) {
+      this.selectedZone = updated;
+    }
+    this.checkEnvironmentalAlerts();
+  }
+
+  onZoneDeleted(zoneId: string): void {
+    this.zones = this.zones.filter((z) => z.id !== zoneId);
+    this.selectedZone = undefined;
+    this.checkEnvironmentalAlerts();
+  }
+
   async enableTracking(alert: PerimeterAlert): Promise<void> {
     this.actionLoading = alert.id;
     try {
@@ -493,6 +540,15 @@ export class MonitoringPage implements OnInit, OnDestroy {
       const updated = await this.resolveAlertUseCase.execute(alert.id);
       this.perimeterAlerts = this.perimeterAlerts.map((a) => (a.id === updated.id ? updated : a));
     } catch (err) { console.error('[Monitoring] resolveAlert failed', err); }
+    finally { this.actionLoading = null; }
+  }
+
+  async dismissAlert(alert: PerimeterAlert): Promise<void> {
+    this.actionLoading = alert.id;
+    try {
+      await this.dismissAlertUseCase.execute(alert.id);
+      this.perimeterAlerts = this.perimeterAlerts.filter((a) => a.id !== alert.id);
+    } catch (err) { console.error('[Monitoring] dismissAlert failed', err); }
     finally { this.actionLoading = null; }
   }
 

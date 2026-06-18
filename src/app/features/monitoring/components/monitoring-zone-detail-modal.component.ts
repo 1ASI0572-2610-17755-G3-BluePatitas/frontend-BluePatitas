@@ -1,12 +1,16 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, Inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MonitoringZone } from '../../../core/domain/models/bluepatitas.models';
-import { TelemetryRecord } from '../../../core/domain/models/monitoring-api.models';
+import { Animal, MonitoringZone } from '../../../core/domain/models/bluepatitas.models';
+import { TelemetryRecord, PerimeterAlert } from '../../../core/domain/models/monitoring-api.models';
 import { GetTelemetryByTargetUseCase, ProcessTelemetryUseCase } from '../../../core/application/use-cases/monitoring.use-cases';
+import { UpdateMonitoringZoneUseCase, DeleteMonitoringZoneUseCase } from '../../../core/application/use-cases/bluepatitas.use-cases';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { BpButtonComponent } from '../../../shared/components/bp-button/bp-button.component';
 import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.component';
+import { ANIMAL_REPOSITORY, AnimalRepository } from '../../../core/domain/repositories/repository.tokens';
+
+declare const L: any;
 
 @Component({
   selector: 'bp-monitoring-zone-detail-modal',
@@ -23,133 +27,246 @@ import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.c
             </div>
           </header>
 
-          <section class="camera-frame">
-            @if (zone.imageUrl) {
-              <img [src]="zone.imageUrl" [alt]="zone.name" (error)="hideBrokenImage($event)" />
-            }
-            <b>CAM-01</b>
-            <div class="camera-actions"><span></span><i></i></div>
-          </section>
-
-          <!-- ── Live metrics (real backend values when available) ──────── -->
-          <section class="detail-metrics">
-            <article>
-              <span class="mini-icon temp"></span>
-              <small>{{ 'monitoring.temperature' | translate }}</small>
-              <strong>
-                {{ displayTemp ?? '--' }}°C
-                @if (latestTelemetry) { <em class="live-pill">API</em> }
-              </strong>
-              <p>{{ 'monitoring.temperatureHint' | translate }}</p>
-            </article>
-            <article>
-              <span class="mini-icon humidity"></span>
-              <small>{{ 'monitoring.humidity' | translate }}</small>
-              <strong>
-                {{ displayHumidity ?? '--' }}%
-                @if (latestTelemetry) { <em class="live-pill">API</em> }
-              </strong>
-              <p>{{ 'monitoring.stable' | translate }}</p>
-            </article>
-            <article>
-              <span class="mini-icon visual"></span>
-              <small>{{ 'monitoring.visualStatus' | translate }}</small>
-              <strong>{{ visualStatusLabel }}</strong>
-              <p></p>
-            </article>
-            <article>
-              <span class="mini-icon occupancy"></span>
-              <small>{{ 'monitoring.occupancy' | translate }}</small>
-              <strong>{{ zone.animalCount }} / 20 {{ 'monitoring.animals' | translate }}</strong>
-              <div class="progress"><i [style.width.%]="zone.animalCount * 5"></i></div>
-            </article>
-          </section>
-
-          <!-- ── Submit new telemetry ───────────────────────────────────── -->
-          @if (zone.targetId) {
-            <section class="telemetry-form-section">
-              <header class="form-section-header">
-                <strong>📡 Enviar nueva lectura al backend</strong>
-                <span class="form-hint">Los números de la tarjeta se actualizarán al guardar</span>
-              </header>
+          @if (isEditing) {
+            <!-- ── Edit View ────────────────────────────────────────────── -->
+            <section class="edit-zone-form">
               <div class="telemetry-inputs">
-                <label>
-                  🌡️ Temperatura (°C)
-                  <input type="number" [(ngModel)]="formTemp" placeholder="ej: 25.5" step="0.1" />
+                <label class="full-col">
+                  Nombre de la zona
+                  <input type="text" [(ngModel)]="editName" placeholder="Nombre" />
                 </label>
                 <label>
-                  💧 Humedad (%)
-                  <input type="number" [(ngModel)]="formHumidity" placeholder="ej: 55" step="0.1" min="0" max="100" />
+                  Temp mínima límite (°C)
+                  <input type="number" [(ngModel)]="editMinTemp" placeholder="ej: 18" />
+                </label>
+                <label>
+                  Temp máxima límite (°C)
+                  <input type="number" [(ngModel)]="editMaxTemp" placeholder="ej: 28" />
+                </label>
+              </div>
+
+              <strong class="section-label" style="margin-top: 14px; display: block; color: var(--bp-dark-navy); font-size: 12px;">🗺️ Ajustar Geocerca</strong>
+              <p class="form-hint" style="font-size: 11px; color: var(--bp-slate-gray); margin-top: 2px;">
+                Haz clic en el mapa o arrastra el marcador verde para cambiar las coordenadas de la geocerca.
+              </p>
+              
+              <div class="map-container" style="margin-top: 8px;">
+                <div id="detail-map"></div>
+              </div>
+
+              <div class="telemetry-inputs" style="margin-top: 10px;">
+                <label>
+                  Latitud Centro
+                  <input type="number" [(ngModel)]="editLatitude" (ngModelChange)="updateEditMap()" step="0.000001" />
+                </label>
+                <label>
+                  Longitud Centro
+                  <input type="number" [(ngModel)]="editLongitude" (ngModelChange)="updateEditMap()" step="0.000001" />
                 </label>
                 <label class="full-col">
-                  🎥 Datos visuales (opcional)
-                  <input type="text" [(ngModel)]="formVisualData" placeholder="ej: NORMAL o ANOMALY" />
+                  Radio de Geocerca (metros)
+                  <input type="number" [(ngModel)]="editRadius" (ngModelChange)="updateEditMap()" />
                 </label>
               </div>
-              <div class="form-actions">
-                <button
-                  class="submit-btn"
-                  (click)="submitTelemetry()"
-                  [disabled]="formTemp === null || formHumidity === null || submitting">
-                  {{ submitting ? '⏳ Enviando…' : '✅ Guardar en backend' }}
+
+              <div class="form-actions" style="margin-top: 16px;">
+                <button class="submit-btn" (click)="saveEdit()" [disabled]="submitting">
+                  {{ submitting ? '⏳ Guardando…' : '💾 Guardar cambios' }}
                 </button>
-                @if (submitSuccess) {
-                  <span class="submit-feedback ok">✓ Guardado — números actualizados</span>
-                }
-                @if (submitError) {
-                  <span class="submit-feedback err">✗ Error al conectar con el backend</span>
-                }
+                <button class="submit-btn" style="background-color: var(--bp-slate-gray);" (click)="cancelEdit()">Cancelar</button>
               </div>
+            </section>
+          } @else {
+            <!-- ── Normal View ──────────────────────────────────────────── -->
+            <section class="camera-frame">
+              @if (zone.imageUrl) {
+                <img [src]="zone.imageUrl" [alt]="zone.name" (error)="hideBrokenImage($event)" />
+              }
+              <b>CAM-01</b>
+              <div class="camera-actions"><span></span><i></i></div>
+            </section>
+
+            <!-- ── Live metrics (real backend values when available) ──────── -->
+            <section class="detail-metrics">
+              <article>
+                <span class="mini-icon temp"></span>
+                <small>{{ 'monitoring.temperature' | translate }}</small>
+                <strong>
+                  {{ displayTemp ?? '--' }}°C
+                  @if (latestTelemetry) { <em class="live-pill">API</em> }
+                </strong>
+                <p>{{ 'monitoring.temperatureHint' | translate }}</p>
+              </article>
+              <article>
+                <span class="mini-icon humidity"></span>
+                <small>{{ 'monitoring.humidity' | translate }}</small>
+                <strong>
+                  {{ displayHumidity ?? '--' }}%
+                  @if (latestTelemetry) { <em class="live-pill">API</em> }
+                </strong>
+                <p>{{ 'monitoring.stable' | translate }}</p>
+              </article>
+              <article>
+                <span class="mini-icon gps-icon"></span>
+                <small>📍 Ubicación GPS</small>
+                <strong style="font-size: 12px; margin: 11px 0 7px; word-break: break-all; display: block; line-height: 1.4;">
+                  @if (latestGpsTelemetry?.latitude && latestGpsTelemetry?.longitude) {
+                    Lat: {{ latestGpsTelemetry?.latitude | number:'1.5-5' }}<br>Lng: {{ latestGpsTelemetry?.longitude | number:'1.5-5' }}
+                  } @else if (zone?.geofenceLatitude && zone?.geofenceLongitude) {
+                    Lat: {{ zone.geofenceLatitude | number:'1.5-5' }}<br>Lng: {{ zone.geofenceLongitude | number:'1.5-5' }}
+                  } @else {
+                    -- Sin coordenadas
+                  }
+                  @if (latestTelemetry) { <em class="live-pill" style="margin-top: 4px; display: inline-block;">API</em> }
+                </strong>
+                <p>Último reporte GPS recibido</p>
+              </article>
+              <article>
+                <span class="mini-icon visual"></span>
+                <small>{{ 'monitoring.visualStatus' | translate }}</small>
+                <strong>{{ visualStatusLabel }}</strong>
+                <p></p>
+              </article>
+              <article>
+                <span class="mini-icon occupancy"></span>
+                <small>{{ 'monitoring.occupancy' | translate }}</small>
+                <strong>{{ zone.animalCount }} / 20 {{ 'monitoring.animals' | translate }}</strong>
+                <div class="progress"><i [style.width.%]="zone.animalCount * 5"></i></div>
+              </article>
+            </section>
+
+            <!-- ── Geofence & Location Map ──────────────────────────────── -->
+            <section class="geofence-map-section" style="border: 1px solid var(--bp-border); border-radius: 7px; padding: 14px; background: #f8fdff;">
+              <strong style="font-size: 13px; color: var(--bp-dark-navy);">🗺️ Mapa de Geocerca y Ubicación GPS</strong>
+              <div class="map-container" style="margin-top: 8px;">
+                <div id="detail-map"></div>
+              </div>
+            </section>
+
+            <!-- ── Submit new telemetry ───────────────────────────────────── -->
+            @if (zone.targetId) {
+              <section class="telemetry-form-section">
+                <header class="form-section-header">
+                  <strong>📡 Enviar nueva lectura al backend</strong>
+                  <span class="form-hint">Los números de la tarjeta se actualizarán al guardar</span>
+                </header>
+                <div class="telemetry-inputs">
+                  <label>
+                    🌡️ Temperatura (°C)
+                    <input type="number" [(ngModel)]="formTemp" placeholder="ej: 25.5" step="0.1" />
+                  </label>
+                  <label>
+                    💧 Humedad (%)
+                    <input type="number" [(ngModel)]="formHumidity" placeholder="ej: 55" step="0.1" min="0" max="100" />
+                  </label>
+                  <label class="full-col">
+                    🎥 Datos visuales (opcional)
+                    <input type="text" [(ngModel)]="formVisualData" placeholder="ej: NORMAL o ANOMALY" />
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button
+                    class="submit-btn"
+                    (click)="submitTelemetry()"
+                    [disabled]="formTemp === null || formHumidity === null || submitting">
+                    {{ submitting ? '⏳ Enviando…' : '✅ Guardar en backend' }}
+                  </button>
+                  @if (submitSuccess) {
+                    <span class="submit-feedback ok">✓ Guardado — números actualizados</span>
+                  }
+                  @if (submitError) {
+                    <span class="submit-feedback err">✗ Error al conectar con el backend</span>
+                  }
+                </div>
+              </section>
+            }
+
+            <!-- ── Alert history section ─────────────────────────────────── -->
+            @if (showAlerts) {
+              <section class="alerts-history-section" style="border: 1px solid var(--bp-border); border-radius: 7px; padding: 14px; background: #fff8f8; margin-top: 4px;">
+                <strong style="font-size: 13px; color: var(--bp-dark-navy);">⚠️ Historial de Alertas de Perímetro</strong>
+                <div class="alerts-list" style="display: grid; gap: 8px; margin-top: 10px; max-height: 200px; overflow-y: auto;">
+                  @if (zoneAlerts.length === 0) {
+                    <p class="telemetry-empty">No hay alertas de perímetro registradas para esta zona.</p>
+                  } @else {
+                    @for (alert of zoneAlerts; track alert.id) {
+                      <div style="border-left: 3px solid var(--bp-critical); background: #fff; padding: 8px 12px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                          <strong>Brecha de Perímetro</strong>
+                          <span style="font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 999px; background: #ffe0e0; color: #a10000;">
+                            {{ alert.isBreachConfirmed ? 'Confirmada' : 'Resuelta' }}
+                          </span>
+                        </div>
+                        @if (alert.currentCoordinates) {
+                          <p style="margin: 4px 0 0; font-size: 11px; color: var(--bp-slate-gray);">
+                            📍 Coordenadas: {{ alert.currentCoordinates.latitude | number:'1.5-5' }}, {{ alert.currentCoordinates.longitude | number:'1.5-5' }}
+                          </p>
+                        }
+                        <small style="color: var(--bp-slate-gray); font-size: 10px;">{{ alert.trackingActive ? '📡 Tracking Activo' : 'Sin seguimiento' }}</small>
+                      </div>
+                    }
+                  }
+                </div>
+              </section>
+            }
+
+            <!-- ── Telemetry history ──────────────────────────────────────── -->
+            <section class="telemetry-section">
+              <header class="telemetry-header">
+                <strong>Historial de Telemetría <small>(backend)</small></strong>
+                <span class="telemetry-badge" [class.loading]="telemetryLoading" [class.error]="telemetryError">
+                  {{ telemetryLoading ? '⏳ Cargando…' : telemetryError ? '⚠️ Sin datos' : (telemetry.length + ' registros') }}
+                </span>
+              </header>
+
+              @if (!telemetryLoading && !telemetryError && telemetry.length > 0) {
+                <div class="telemetry-table-wrap">
+                  <table class="telemetry-table">
+                    <thead>
+                      <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Temp (°C)</th>
+                        <th>Humedad (%)</th>
+                        <th>Latitud</th>
+                        <th>Longitud</th>
+                        <th>Anomalía visual</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (rec of telemetry.slice().reverse().slice(0, 10); track rec.id) {
+                        <tr [class.anomaly]="rec.visualData?.toUpperCase()?.includes('ANOMALY')">
+                          <td>{{ formatDate(rec.recordedAt) }}</td>
+                          <td><strong>{{ rec.ambientTemperature !== null ? (rec.ambientTemperature | number:'1.1-1') : '--' }}</strong></td>
+                          <td><strong>{{ rec.ambientHumidity !== null ? (rec.ambientHumidity | number:'1.1-1') : '--' }}</strong></td>
+                          <td>{{ rec.latitude ? (rec.latitude | number:'1.5-5') : '--' }}</td>
+                          <td>{{ rec.longitude ? (rec.longitude | number:'1.5-5') : '--' }}</td>
+                          <td class="anomaly-cell">
+                            {{ rec.visualData?.toUpperCase()?.includes('ANOMALY') ? '⚠️ Sí' : '✅ No' }}
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+
+              @if (!telemetryLoading && !telemetryError && telemetry.length === 0) {
+                <p class="telemetry-empty">Sin registros de telemetría. Usa el formulario de arriba para enviar el primer dato.</p>
+              }
+              @if (!telemetryLoading && telemetryError) {
+                <p class="telemetry-empty">No se pudo conectar con el backend.</p>
+              }
             </section>
           }
 
-          <!-- ── Telemetry history ──────────────────────────────────────── -->
-          <section class="telemetry-section">
-            <header class="telemetry-header">
-              <strong>Historial de Telemetría <small>(backend)</small></strong>
-              <span class="telemetry-badge" [class.loading]="telemetryLoading" [class.error]="telemetryError">
-                {{ telemetryLoading ? '⏳ Cargando…' : telemetryError ? '⚠️ Sin datos' : (telemetry.length + ' registros') }}
-              </span>
-            </header>
-
-            @if (!telemetryLoading && !telemetryError && telemetry.length > 0) {
-              <div class="telemetry-table-wrap">
-                <table class="telemetry-table">
-                  <thead>
-                    <tr>
-                      <th>Fecha/Hora</th>
-                      <th>Temp (°C)</th>
-                      <th>Humedad (%)</th>
-                      <th>Anomalía visual</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (rec of telemetry.slice().reverse().slice(0, 10); track rec.id) {
-                      <tr [class.anomaly]="rec.visualData?.toUpperCase()?.includes('ANOMALY')">
-                        <td>{{ formatDate(rec.recordedAt) }}</td>
-                        <td><strong>{{ rec.ambientTemperature | number:'1.1-1' }}</strong></td>
-                        <td><strong>{{ rec.ambientHumidity | number:'1.1-1' }}</strong></td>
-                        <td class="anomaly-cell">
-                          {{ rec.visualData?.toUpperCase()?.includes('ANOMALY') ? '⚠️ Sí' : '✅ No' }}
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
+          <footer class="modal-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            @if (!isEditing) {
+              <bp-button variant="secondary" (clicked)="showAlerts = !showAlerts">
+                {{ showAlerts ? 'Ocultar alertas' : ('monitoring.alertHistory' | translate) }}
+              </bp-button>
+              <bp-button (clicked)="startEdit()">Editar zona</bp-button>
+              <bp-button variant="secondary" style="color: var(--bp-critical); border-color: var(--bp-critical);" (clicked)="deleteZone()">Eliminar zona</bp-button>
             }
-
-            @if (!telemetryLoading && !telemetryError && telemetry.length === 0) {
-              <p class="telemetry-empty">Sin registros de telemetría. Usa el formulario de arriba para enviar el primer dato.</p>
-            }
-            @if (!telemetryLoading && telemetryError) {
-              <p class="telemetry-empty">No se pudo conectar con el backend.</p>
-            }
-          </section>
-
-          <footer class="modal-actions">
-            <bp-button variant="secondary">{{ 'monitoring.alertHistory' | translate }}</bp-button>
-            <bp-button>{{ 'monitoring.adjustClimate' | translate }}</bp-button>
           </footer>
         </div>
       }
@@ -185,6 +302,7 @@ import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.c
     .visual::after { left: 2px; top: 11px; width: 12px; height: 2px; background: currentColor; }
     .occupancy::before { left: 2px; top: 3px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 7px 0 0 currentColor; }
     .occupancy::after { left: 0; top: 10px; width: 15px; height: 5px; border: 2px solid currentColor; border-top: 0; border-radius: 0 0 8px 8px; }
+    .gps-icon::before { left: 4px; top: 2px; width: 8px; height: 8px; border: 2px solid var(--bp-critical); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
     .progress { height: 5px; margin-top: 8px; border-radius: 999px; background: #d2cbd7; overflow: hidden; }
     .progress i { display: block; height: 100%; border-radius: inherit; background: var(--bp-action-blue); }
     /* ── Telemetry form ─────────────────────────────────────────────────── */
@@ -220,6 +338,8 @@ import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.c
     .anomaly-cell { font-weight: 600; }
     .telemetry-empty { margin: 0; color: var(--bp-slate-gray); font-size: 12px; text-align: center; padding: 12px 0; }
     .modal-actions { margin: 2px 0 -2px; }
+    .map-container { position: relative; width: 100%; height: 250px; }
+    #detail-map { width: 100%; height: 100%; border-radius: 8px; border: 1px solid var(--bp-border); }
     @media (max-width: 560px) {
       .detail-metrics, .telemetry-inputs { grid-template-columns: 1fr; }
       .camera-frame { min-height: 210px; }
@@ -227,16 +347,23 @@ import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.c
     }
   `],
 })
-export class MonitoringZoneDetailModalComponent implements OnChanges {
+export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy {
   @Input() open = false;
   @Input() zone?: MonitoringZone;
+  @Input() allPerimeterAlerts: PerimeterAlert[] = [];
   @Output() closed = new EventEmitter<void>();
   /** Emits when a new telemetry is posted so the parent page can update the zone card. */
   @Output() telemetryPosted = new EventEmitter<{ zoneId: string; temperatureC: number; humidity: number }>();
+  @Output() zoneUpdated = new EventEmitter<MonitoringZone>();
+  @Output() zoneDeleted = new EventEmitter<string>();
 
   telemetry: TelemetryRecord[] = [];
   telemetryLoading = false;
   telemetryError = false;
+  pollTimer: any = null;
+  fastTimer: any = null;
+  zoneAnimals: Animal[] = [];
+  animalMarkers: { animalId: string; marker: any }[] = [];
 
   // ── Form state ─────────────────────────────────────────────────────────
   formTemp: number | null = null;
@@ -246,9 +373,33 @@ export class MonitoringZoneDetailModalComponent implements OnChanges {
   submitSuccess = false;
   submitError = false;
 
+  // ── Edit state ─────────────────────────────────────────────────────────
+  isEditing = false;
+  editName = '';
+  editMinTemp: number | null = null;
+  editMaxTemp: number | null = null;
+  editLatitude = -12.046374;
+  editLongitude = -77.042793;
+  editRadius = 100;
+
+  // ── Alert view state ───────────────────────────────────────────────────
+  showAlerts = false;
+
+  // ── Edge Simulator state ───────────────────────────────────────────────
+  edgeLat: number | null = null;
+  edgeLng: number | null = null;
+
+  // ── Leaflet state ──────────────────────────────────────────────────────
+  map: any;
+  marker: any;
+  circle: any;
+
   constructor(
     private readonly getTelemetry: GetTelemetryByTargetUseCase,
     private readonly processTelemetry: ProcessTelemetryUseCase,
+    private readonly updateZoneUseCase: UpdateMonitoringZoneUseCase,
+    private readonly deleteZoneUseCase: DeleteMonitoringZoneUseCase,
+    @Inject(ANIMAL_REPOSITORY) private readonly animalRepo: AnimalRepository,
   ) {}
 
   async ngOnChanges(changes: SimpleChanges): Promise<void> {
@@ -257,11 +408,100 @@ export class MonitoringZoneDetailModalComponent implements OnChanges {
 
     if ((openChanged || zoneChanged) && this.open && this.zone) {
       this.resetForm();
+      this.isEditing = false;
+      this.showAlerts = false;
       await this.loadTelemetry(this.zone.targetId ?? this.zone.id);
+      await this.loadZoneAnimals();
+      this.initMapDeferred();
+      this.startPolling();
     }
     if (openChanged && !this.open) {
+      this.stopPolling();
       this.telemetry = [];
       this.telemetryError = false;
+      this.clearAnimalMarkers();
+      if (this.map) {
+        this.map.remove();
+        this.map = null;
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
+  }
+
+  async loadZoneAnimals(): Promise<void> {
+    if (!this.zone) return;
+    try {
+      const all = await this.animalRepo.getAnimals();
+      this.zoneAnimals = all.filter((a) => a.zoneId === this.zone!.id);
+    } catch (err) {
+      console.warn('Could not load animals for zone', err);
+      this.zoneAnimals = [];
+    }
+  }
+
+  clearAnimalMarkers() {
+    if (this.map) {
+      for (const item of this.animalMarkers) {
+        item.marker.remove();
+      }
+    }
+    this.animalMarkers = [];
+  }
+
+  startPolling(): void {
+    this.stopPolling();
+    this.pollTimer = setInterval(async () => {
+      if (this.open && this.zone && !this.isEditing) {
+        await this.loadTelemetry(this.zone.targetId ?? this.zone.id);
+        this.updateLiveMarker();
+      }
+    }, 5000);
+    this.fastTimer = setInterval(async () => {
+      if (this.open && this.zone && !this.isEditing) {
+        await this.pollEdgeState();
+        this.syncAnimalMarkers();
+      }
+    }, 1000);
+  }
+
+  async pollEdgeState() {
+    try {
+      const response = await fetch('http://localhost:18090/api/simulador/estado');
+      if (response.ok) {
+        const data = await response.json();
+        this.edgeLat = data.latitude;
+        this.edgeLng = data.longitude;
+      }
+    } catch (err) {
+      console.warn('Failed to poll Edge state from detail modal', err);
+    }
+  }
+
+  stopPolling(): void {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+    if (this.fastTimer) {
+      clearInterval(this.fastTimer);
+      this.fastTimer = null;
+    }
+  }
+
+  updateLiveMarker(): void {
+    if (this.map && this.marker && !this.isEditing) {
+      const centerLat = this.zone?.geofenceLatitude || -11.854374;
+      const centerLng = this.zone?.geofenceLongitude || -76.850793;
+      
+      if (typeof L !== 'undefined') {
+        const newLatLng = L.latLng(centerLat, centerLng);
+        this.marker.setLatLng(newLatLng);
+        this.marker.getPopup().setContent(`<b>Zona: ${this.zone?.name || 'Mascota'} (Estática)</b><br>Lat: ${centerLat.toFixed(6)}<br>Lng: ${centerLng.toFixed(6)}`);
+      }
+      this.syncAnimalMarkers();
     }
   }
 
@@ -269,14 +509,44 @@ export class MonitoringZoneDetailModalComponent implements OnChanges {
     return this.telemetry.length > 0 ? this.telemetry[this.telemetry.length - 1] : undefined;
   }
 
+  get latestTempTelemetry(): TelemetryRecord | undefined {
+    for (let i = this.telemetry.length - 1; i >= 0; i--) {
+      const t = this.telemetry[i];
+      if (t.ambientTemperature !== null && t.ambientTemperature !== undefined) {
+        return t;
+      }
+    }
+    return undefined;
+  }
+
+  get latestHumidityTelemetry(): TelemetryRecord | undefined {
+    for (let i = this.telemetry.length - 1; i >= 0; i--) {
+      const t = this.telemetry[i];
+      if (t.ambientHumidity !== null && t.ambientHumidity !== undefined) {
+        return t;
+      }
+    }
+    return undefined;
+  }
+
+  get latestGpsTelemetry(): TelemetryRecord | undefined {
+    for (let i = this.telemetry.length - 1; i >= 0; i--) {
+      const t = this.telemetry[i];
+      if (t.latitude !== null && t.latitude !== undefined && t.longitude !== null && t.longitude !== undefined) {
+        return t;
+      }
+    }
+    return undefined;
+  }
+
   /** Temperature shown in the metric card: latest backend value or zone mock. */
   get displayTemp(): number | null {
-    return this.latestTelemetry?.ambientTemperature ?? this.zone?.temperatureC ?? null;
+    return this.latestTempTelemetry?.ambientTemperature ?? this.zone?.temperatureC ?? null;
   }
 
   /** Humidity shown in the metric card: latest backend value or zone mock. */
   get displayHumidity(): number | null {
-    return this.latestTelemetry?.ambientHumidity ?? this.zone?.humidity ?? null;
+    return this.latestHumidityTelemetry?.ambientHumidity ?? this.zone?.humidity ?? null;
   }
 
   get visualStatusLabel(): string {
@@ -284,6 +554,216 @@ export class MonitoringZoneDetailModalComponent implements OnChanges {
     const latest = this.latestTelemetry;
     if (!latest || !latest.visualData) return '— Sin datos';
     return latest.visualData.toUpperCase().includes('ANOMALY') ? '⚠️ Anomalía detectada' : '✅ En rango';
+  }
+
+  get zoneAlerts(): PerimeterAlert[] {
+    return this.allPerimeterAlerts.filter((a) => a.targetId === this.zone?.targetId);
+  }
+
+  // ── Map Methods ────────────────────────────────────────────────────────
+  initMapDeferred() {
+    setTimeout(() => {
+      this.initMap();
+    }, 100);
+  }
+
+  initMap() {
+    try {
+      if (typeof L === 'undefined') return;
+
+      const mapEl = document.getElementById('detail-map');
+      if (!mapEl) return;
+
+      if (this.map) {
+        this.map.remove();
+        this.map = null;
+      }
+
+      if (this.isEditing) {
+        const lat = this.editLatitude;
+        const lng = this.editLongitude;
+        const rad = this.editRadius;
+
+        this.map = L.map('detail-map').setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+        }).addTo(this.map);
+
+        this.circle = L.circle([lat, lng], {
+          color: '#10b981',
+          fillColor: '#10b981',
+          fillOpacity: 0.15,
+          radius: rad
+        }).addTo(this.map);
+
+        this.marker = L.marker([lat, lng], { draggable: true }).addTo(this.map)
+          .bindPopup('<b>Geocerca (Centro Arrastrable)</b>').openPopup();
+
+        this.map.on('click', (e: any) => {
+          this.editLatitude = e.latlng.lat;
+          this.editLongitude = e.latlng.lng;
+          this.updateEditMapElements();
+        });
+
+        this.marker.on('dragend', (e: any) => {
+          const pos = this.marker.getLatLng();
+          this.editLatitude = pos.lat;
+          this.editLongitude = pos.lng;
+          this.updateEditMapElements();
+        });
+      } else {
+        const centerLat = this.zone?.geofenceLatitude || -11.854374;
+        const centerLng = this.zone?.geofenceLongitude || -76.850793;
+        const radius = this.zone?.geofenceRadiusMeters || 100;
+
+        this.map = L.map('detail-map').setView([centerLat, centerLng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+        }).addTo(this.map);
+
+        this.circle = L.circle([centerLat, centerLng], {
+          color: '#10b981',
+          fillColor: '#10b981',
+          fillOpacity: 0.1,
+          radius: radius
+        }).addTo(this.map);
+
+        this.marker = L.marker([centerLat, centerLng]).addTo(this.map)
+          .bindPopup(`<b>Zona: ${this.zone?.name || 'Mascota'} (Estática)</b><br>Lat: ${centerLat.toFixed(6)}<br>Lng: ${centerLng.toFixed(6)}`);
+
+        this.syncAnimalMarkers();
+      }
+    } catch (err) {
+      console.warn('Map initialization failed', err);
+    }
+  }
+
+  syncAnimalMarkers() {
+    if (!this.map || this.isEditing) return;
+
+    const redIcon = typeof L !== 'undefined' ? new L.Icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    }) : null;
+
+    for (const animal of this.zoneAnimals) {
+      const isAssigned = localStorage.getItem('gps_assigned_' + animal.id) === 'true';
+      const existing = this.animalMarkers.find((item) => item.animalId === animal.id);
+
+      if (isAssigned) {
+        const lat = this.edgeLat ?? this.zone?.geofenceLatitude ?? -12.046374;
+        const lng = this.edgeLng ?? this.zone?.geofenceLongitude ?? -77.042793;
+
+        if (existing) {
+          existing.marker.setLatLng([lat, lng]);
+          existing.marker.getPopup().setContent(`<b>Nombre del Animal: ${animal.name}</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`);
+        } else {
+          if (typeof L !== 'undefined') {
+            const marker = L.marker([lat, lng], { icon: redIcon }).addTo(this.map)
+              .bindPopup(`<b>Nombre del Animal: ${animal.name}</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`);
+            this.animalMarkers.push({ animalId: animal.id, marker });
+          }
+        }
+      } else {
+        if (existing) {
+          existing.marker.remove();
+          this.animalMarkers = this.animalMarkers.filter((item) => item.animalId !== animal.id);
+        }
+      }
+    }
+
+    for (const item of [...this.animalMarkers]) {
+      const inZone = this.zoneAnimals.some((a) => a.id === item.animalId);
+      if (!inZone) {
+        item.marker.remove();
+        this.animalMarkers = this.animalMarkers.filter((m) => m.animalId !== item.animalId);
+      }
+    }
+  }
+
+  updateEditMap() {
+    this.updateEditMapElements();
+  }
+
+  updateEditMapElements() {
+    if (this.marker) {
+      this.marker.setLatLng([this.editLatitude, this.editLongitude]);
+    }
+    if (this.circle) {
+      this.circle.setLatLng([this.editLatitude, this.editLongitude]);
+      this.circle.setRadius(this.editRadius || 1);
+    }
+    if (this.map) {
+      this.map.setView([this.editLatitude, this.editLongitude]);
+    }
+  }
+
+  // ── Actions Methods ────────────────────────────────────────────────────
+  startEdit() {
+    this.isEditing = true;
+    this.editName = this.zone?.name || '';
+    this.editMinTemp = this.zone?.minTemperatureC ?? null;
+    this.editMaxTemp = this.zone?.maxTemperatureC ?? null;
+    this.editLatitude = this.zone?.geofenceLatitude || -12.046374;
+    this.editLongitude = this.zone?.geofenceLongitude || -77.042793;
+    this.editRadius = this.zone?.geofenceRadiusMeters || 100;
+    this.initMapDeferred();
+  }
+
+  cancelEdit() {
+    this.isEditing = false;
+    this.initMapDeferred();
+  }
+
+  async saveEdit() {
+    if (!this.zone) return;
+    this.submitting = true;
+    try {
+      const updated = await this.updateZoneUseCase.execute(this.zone.id, {
+        name: this.editName,
+        targetId: this.zone.targetId,
+        temperatureC: this.zone.temperatureC,
+        humidity: this.zone.humidity,
+        status: this.zone.status,
+        animalCount: this.zone.animalCount,
+        cameraEnabled: this.zone.cameraEnabled,
+        imageUrl: this.zone.imageUrl,
+        minTemperatureC: this.editMinTemp,
+        maxTemperatureC: this.editMaxTemp,
+        geofenceLatitude: this.editLatitude,
+        geofenceLongitude: this.editLongitude,
+        geofenceRadiusMeters: this.editRadius,
+      });
+
+      this.zoneUpdated.emit(updated);
+      this.zone = updated;
+      this.isEditing = false;
+      this.initMapDeferred();
+    } catch (err) {
+      console.error('Failed to update zone', err);
+    } finally {
+      this.submitting = false;
+    }
+  }
+
+  async deleteZone() {
+    if (!this.zone) return;
+    if (confirm(`¿Estás seguro de que deseas eliminar la zona "${this.zone.name}"?`)) {
+      this.submitting = true;
+      try {
+        await this.deleteZoneUseCase.execute(this.zone.id);
+        this.zoneDeleted.emit(this.zone.id);
+        this.closed.emit();
+      } catch (err) {
+        console.error('Failed to delete zone', err);
+      } finally {
+        this.submitting = false;
+      }
+    }
   }
 
   async submitTelemetry(): Promise<void> {
@@ -297,6 +777,9 @@ export class MonitoringZoneDetailModalComponent implements OnChanges {
         ambientTemperature: this.formTemp,
         ambientHumidity: this.formHumidity,
         visualData: this.formVisualData || undefined,
+        // Mock current latitude & longitude slightly offset from geofence center for manual test
+        latitude: (this.zone.geofenceLatitude || -12.046374) + 0.0001,
+        longitude: (this.zone.geofenceLongitude || -77.042793) + 0.0001,
       });
       // Refresh history after posting
       await this.loadTelemetry(this.zone.targetId);
@@ -308,6 +791,7 @@ export class MonitoringZoneDetailModalComponent implements OnChanges {
         humidity: this.formHumidity,
       });
       this.resetForm();
+      this.initMapDeferred();
       setTimeout(() => (this.submitSuccess = false), 4000);
     } catch (err) {
       console.error('[MonitoringZoneDetail] submitTelemetry failed', err);

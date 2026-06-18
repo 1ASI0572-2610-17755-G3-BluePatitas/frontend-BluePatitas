@@ -75,4 +75,23 @@ export class HttpShelterRepository implements ShelterRepository {
       throw error;
     }
   }
+
+  async updateMonitoringZone(id: string, zone: Omit<MonitoringZone, 'id'>): Promise<MonitoringZone> {
+    try {
+      const response = await firstValueFrom(this.http.put<MonitoringZone>(`${this.zonesUrl}/${id}`, zone));
+      return response;
+    } catch (error) {
+      console.error('Failed to update monitoring zone', error);
+      throw error;
+    }
+  }
+
+  async deleteMonitoringZone(id: string): Promise<void> {
+    try {
+      await firstValueFrom(this.http.delete<void>(`${this.zonesUrl}/${id}`));
+    } catch (error) {
+      console.error('Failed to delete monitoring zone', error);
+      throw error;
+    }
+  }
 }

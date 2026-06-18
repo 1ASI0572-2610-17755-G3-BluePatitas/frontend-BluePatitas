@@ -6,6 +6,7 @@ export interface AnimalRepository {
   getAnimalById(id: string): Promise<Animal | undefined>;
   createAnimal(animal: Omit<Animal, 'id'>): Promise<Animal>;
   updateAnimal(animal: Animal): Promise<Animal>;
+  deleteAnimal(id: string): Promise<void>;
 }
 
 export interface ShelterRepository {
@@ -13,6 +14,8 @@ export interface ShelterRepository {
   getMonitoringZones(): Promise<MonitoringZone[]>;
   updateShelterSettings(shelter: Shelter): Promise<Shelter>;
   createMonitoringZone(zone: Omit<MonitoringZone, 'id'>): Promise<MonitoringZone>;
+  updateMonitoringZone(id: string, zone: Omit<MonitoringZone, 'id'>): Promise<MonitoringZone>;
+  deleteMonitoringZone(id: string): Promise<void>;
 }
 
 export interface DeviceRepository {

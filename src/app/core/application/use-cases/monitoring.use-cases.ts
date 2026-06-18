@@ -71,3 +71,17 @@ export class ProcessTelemetryUseCase {
     return this.repository.processTelemetry(request);
   }
 }
+
+/**
+ * DismissAlertUseCase
+ *
+ * Dismisses (deletes) a perimeter alert from the system permanently.
+ * Endpoint: DELETE /api/monitoring/alerts/{id}
+ */
+@Injectable({ providedIn: 'root' })
+export class DismissAlertUseCase {
+  private readonly repository = inject(MONITORING_REPOSITORY);
+  execute(alertId: string) {
+    return this.repository.dismissAlert(alertId);
+  }
+}

@@ -54,6 +54,13 @@ export class HttpMonitoringRepository implements MonitoringRepository {
     );
   }
 
+  /** DELETE /api/monitoring/alerts/{id} */
+  dismissAlert(alertId: string): Promise<void> {
+    return firstValueFrom(
+      this.http.delete<void>(`${this.alertsUrl}/${alertId}`)
+    );
+  }
+
   // ── Telemetry ────────────────────────────────────────────────────────────────
 
   /** GET /api/monitoring/telemetry/{targetId} */

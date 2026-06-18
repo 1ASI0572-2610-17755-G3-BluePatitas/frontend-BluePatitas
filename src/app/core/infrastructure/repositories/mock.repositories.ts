@@ -26,6 +26,13 @@ export class MockAnimalRepository implements AnimalRepository {
     }
     return animal;
   }
+
+  async deleteAnimal(id: string): Promise<void> {
+    const idx = mockAnimals.findIndex((a) => a.id === id);
+    if (idx !== -1) {
+      mockAnimals.splice(idx, 1);
+    }
+  }
 }
 
 @Injectable()
@@ -60,6 +67,22 @@ export class MockShelterRepository implements ShelterRepository {
     } as MonitoringZone;
     mockZones.push(newZone);
     return structuredClone(newZone);
+  }
+
+  async updateMonitoringZone(id: string, zone: Omit<MonitoringZone, 'id'>): Promise<MonitoringZone> {
+    const idx = mockZones.findIndex((z) => z.id === id);
+    const updated = { ...zone, id } as MonitoringZone;
+    if (idx !== -1) {
+      mockZones[idx] = updated;
+    }
+    return structuredClone(updated);
+  }
+
+  async deleteMonitoringZone(id: string): Promise<void> {
+    const idx = mockZones.findIndex((z) => z.id === id);
+    if (idx !== -1) {
+      mockZones.splice(idx, 1);
+    }
   }
 }
 

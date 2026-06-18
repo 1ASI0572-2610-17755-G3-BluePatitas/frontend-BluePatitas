@@ -123,6 +123,22 @@ export class CreateMonitoringZoneUseCase {
 }
 
 @Injectable({ providedIn: 'root' })
+export class UpdateMonitoringZoneUseCase {
+  private readonly repository = inject(SHELTER_REPOSITORY);
+  execute(id: string, zone: Omit<MonitoringZone, 'id'>) {
+    return this.repository.updateMonitoringZone(id, zone);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class DeleteMonitoringZoneUseCase {
+  private readonly repository = inject(SHELTER_REPOSITORY);
+  execute(id: string) {
+    return this.repository.deleteMonitoringZone(id);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
 export class UpdateVeterinarianUseCase {
   private readonly repository = inject(VETERINARIAN_REPOSITORY);
   execute(vet: Veterinarian) {
