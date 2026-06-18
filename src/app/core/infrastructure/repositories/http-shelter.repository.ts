@@ -69,25 +69,27 @@ export class HttpShelterRepository implements ShelterRepository {
 
   async getMonitoringZones(): Promise<MonitoringZone[]> {
     try {
-      const [privateZones, publicZones] = await Promise.all([
-        firstValueFrom(this.http.get<MonitoringZone[]>(this.zonesUrl)).catch(
-          (error) => {
-            console.warn(
-              "Failed to fetch authenticated monitoring zones, using public live zones if available",
-              error,
-            );
-            return [] as MonitoringZone[];
-          },
-        ),
-        firstValueFrom(
-          this.http.get<MonitoringZone[]>(this.publicZonesUrl),
-        ).catch((error) => {
-          console.warn("Failed to fetch public live monitoring zones", error);
-          return [] as MonitoringZone[];
-        }),
-      ]);
+      let privateZones: MonitoringZone[] | null = null;
+      try {
+        privateZones = await firstValueFrom(
+          this.http.get<MonitoringZone[]>(this.zonesUrl),
+        );
+      } catch (error) {
+        console.warn(
+          "Failed to fetch authenticated monitoring zones, using public live zones if available",
+          error,
+        );
+        privateZones = null;
+      }
 
-      if (privateZones.length === 0) {
+      const publicZones = await firstValueFrom(
+        this.http.get<MonitoringZone[]>(this.publicZonesUrl),
+      ).catch((error) => {
+        console.warn("Failed to fetch public live monitoring zones", error);
+        return [] as MonitoringZone[];
+      });
+
+      if (privateZones === null) {
         return publicZones;
       }
 

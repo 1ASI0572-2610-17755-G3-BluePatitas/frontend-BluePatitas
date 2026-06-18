@@ -174,10 +174,10 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     await this.loadData();
-    // Poll data every 5 seconds to get real-time telemetry updates and diet plan schedules
+    // Poll data every 1 minute to get real-time telemetry updates and diet plan schedules
     this.refreshIntervalId = setInterval(() => {
       this.loadData();
-    }, 5000);
+    }, 60000);
   }
 
   ngOnDestroy(): void {

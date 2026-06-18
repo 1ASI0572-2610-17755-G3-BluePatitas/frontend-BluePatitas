@@ -45,7 +45,10 @@ declare const L: any;
                 </label>
               </div>
 
-              <strong class="section-label" style="margin-top: 14px; display: block; color: var(--bp-dark-navy); font-size: 12px;">🗺️ Ajustar Geocerca</strong>
+              <strong class="section-label" style="margin-top: 14px; display: inline-flex; align-items: center; gap: 4px; color: var(--bp-dark-navy); font-size: 12px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
+                Ajustar Geocerca
+              </strong>
               <p class="form-hint" style="font-size: 11px; color: var(--bp-slate-gray); margin-top: 2px;">
                 Haz clic en el mapa o arrastra el marcador verde para cambiar las coordenadas de la geocerca.
               </p>
@@ -70,8 +73,12 @@ declare const L: any;
               </div>
 
               <div class="form-actions" style="margin-top: 16px;">
-                <button class="submit-btn" (click)="saveEdit()" [disabled]="submitting">
-                  {{ submitting ? '⏳ Guardando…' : '💾 Guardar cambios' }}
+                <button class="submit-btn" (click)="saveEdit()" [disabled]="submitting" style="display: inline-flex; align-items: center; gap: 6px; justify-content: center;">
+                  @if (submitting) {
+                    <svg class="spin-anim" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Guardando…
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Guardar cambios
+                  }
                 </button>
                 <button class="submit-btn" style="background-color: var(--bp-slate-gray);" (click)="cancelEdit()">Cancelar</button>
               </div>
@@ -79,11 +86,22 @@ declare const L: any;
           } @else {
             <!-- ── Normal View ──────────────────────────────────────────── -->
             <section class="camera-frame">
-              @if (zone.imageUrl) {
+              @if (useWebcam) {
+                <video id="webcam-video" autoplay playsinline style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;"></video>
+              } @else if (zone.imageUrl) {
                 <img [src]="zone.imageUrl" [alt]="zone.name" (error)="hideBrokenImage($event)" />
               }
               <b>CAM-01</b>
-              <div class="camera-actions"><span></span><i></i></div>
+              <div class="camera-actions" style="z-index: 10;">
+                <button type="button" (click)="toggleWebcam()" [title]="'Usar cámara local'" style="width: 28px; height: 28px; border-radius: 50%; background: rgba(11,31,47,.72); border: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; padding: 0; outline: none; margin: 0;">
+                  @if (useWebcam) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                  }
+                </button>
+                <i></i>
+              </div>
             </section>
 
             <!-- ── Live metrics (real backend values when available) ──────── -->
@@ -108,7 +126,10 @@ declare const L: any;
               </article>
               <article>
                 <span class="mini-icon gps-icon"></span>
-                <small>📍 Ubicación GPS</small>
+                <small style="display: inline-flex; align-items: center; gap: 4px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--bp-action-blue);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  Ubicación GPS
+                </small>
                 <strong style="font-size: 12px; margin: 11px 0 7px; word-break: break-all; display: block; line-height: 1.4;">
                   @if (latestGpsTelemetry?.latitude && latestGpsTelemetry?.longitude) {
                     Lat: {{ latestGpsTelemetry?.latitude | number:'1.5-5' }}<br>Lng: {{ latestGpsTelemetry?.longitude | number:'1.5-5' }}
@@ -124,7 +145,16 @@ declare const L: any;
               <article>
                 <span class="mini-icon visual"></span>
                 <small>{{ 'monitoring.visualStatus' | translate }}</small>
-                <strong>{{ visualStatusLabel }}</strong>
+                <strong style="display: inline-flex; align-items: center; gap: 4px; font-size: 15px;">
+                  @if (latestTelemetry && latestTelemetry.visualData) {
+                    @if (latestTelemetry.visualData.toUpperCase().includes('ANOMALY')) {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--bp-critical);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #007a72;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    }
+                  }
+                  {{ visualStatusLabel }}
+                </strong>
                 <p></p>
               </article>
               <article>
@@ -137,7 +167,10 @@ declare const L: any;
 
             <!-- ── Geofence & Location Map ──────────────────────────────── -->
             <section class="geofence-map-section" style="border: 1px solid var(--bp-border); border-radius: 7px; padding: 14px; background: #f8fdff;">
-              <strong style="font-size: 13px; color: var(--bp-dark-navy);">🗺️ Mapa de Geocerca y Ubicación GPS</strong>
+              <strong style="font-size: 13px; color: var(--bp-dark-navy); display: inline-flex; align-items: center; gap: 4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
+                Mapa de Geocerca y Ubicación GPS
+              </strong>
               <div class="map-container" style="margin-top: 8px;">
                 <div id="detail-map"></div>
               </div>
@@ -147,20 +180,32 @@ declare const L: any;
             @if (zone.targetId) {
               <section class="telemetry-form-section">
                 <header class="form-section-header">
-                  <strong>📡 Enviar nueva lectura al backend</strong>
+                  <strong style="display: inline-flex; align-items: center; gap: 4px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg>
+                    Enviar nueva lectura al backend
+                  </strong>
                   <span class="form-hint">Los números de la tarjeta se actualizarán al guardar</span>
                 </header>
                 <div class="telemetry-inputs">
                   <label>
-                    🌡️ Temperatura (°C)
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>
+                      Temperatura (°C)
+                    </span>
                     <input type="number" [(ngModel)]="formTemp" placeholder="ej: 25.5" step="0.1" />
                   </label>
                   <label>
-                    💧 Humedad (%)
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                      Humedad (%)
+                    </span>
                     <input type="number" [(ngModel)]="formHumidity" placeholder="ej: 55" step="0.1" min="0" max="100" />
                   </label>
                   <label class="full-col">
-                    🎥 Datos visuales (opcional)
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                      Datos visuales (opcional)
+                    </span>
                     <input type="text" [(ngModel)]="formVisualData" placeholder="ej: NORMAL o ANOMALY" />
                   </label>
                 </div>
@@ -168,14 +213,25 @@ declare const L: any;
                   <button
                     class="submit-btn"
                     (click)="submitTelemetry()"
-                    [disabled]="formTemp === null || formHumidity === null || submitting">
-                    {{ submitting ? '⏳ Enviando…' : '✅ Guardar en backend' }}
+                    [disabled]="formTemp === null || formHumidity === null || submitting"
+                    style="display: inline-flex; align-items: center; gap: 6px; justify-content: center;">
+                    @if (submitting) {
+                      <svg class="spin-anim" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Enviando…
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Guardar en backend
+                    }
                   </button>
                   @if (submitSuccess) {
-                    <span class="submit-feedback ok">✓ Guardado — números actualizados</span>
+                    <span class="submit-feedback ok" style="display: inline-flex; align-items: center; gap: 4px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #007a72;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      Guardado — números actualizados
+                    </span>
                   }
                   @if (submitError) {
-                    <span class="submit-feedback err">✗ Error al conectar con el backend</span>
+                    <span class="submit-feedback err" style="display: inline-flex; align-items: center; gap: 4px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--bp-critical);"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      Error al conectar con el backend
+                    </span>
                   }
                 </div>
               </section>
@@ -184,7 +240,10 @@ declare const L: any;
             <!-- ── Alert history section ─────────────────────────────────── -->
             @if (showAlerts) {
               <section class="alerts-history-section" style="border: 1px solid var(--bp-border); border-radius: 7px; padding: 14px; background: #fff8f8; margin-top: 4px;">
-                <strong style="font-size: 13px; color: var(--bp-dark-navy);">⚠️ Historial de Alertas de Perímetro</strong>
+                <strong style="font-size: 13px; color: var(--bp-dark-navy); display: inline-flex; align-items: center; gap: 4px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  Historial de Alertas de Perímetro
+                </strong>
                 <div class="alerts-list" style="display: grid; gap: 8px; margin-top: 10px; max-height: 200px; overflow-y: auto;">
                   @if (zoneAlerts.length === 0) {
                     <p class="telemetry-empty">No hay alertas de perímetro registradas para esta zona.</p>
@@ -198,11 +257,18 @@ declare const L: any;
                           </span>
                         </div>
                         @if (alert.currentCoordinates) {
-                          <p style="margin: 4px 0 0; font-size: 11px; color: var(--bp-slate-gray);">
-                            📍 Coordenadas: {{ alert.currentCoordinates.latitude | number:'1.5-5' }}, {{ alert.currentCoordinates.longitude | number:'1.5-5' }}
+                          <p style="margin: 4px 0 0; font-size: 11px; color: var(--bp-slate-gray); display: inline-flex; align-items: center; gap: 4px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            Coordenadas: {{ alert.currentCoordinates.latitude | number:'1.5-5' }}, {{ alert.currentCoordinates.longitude | number:'1.5-5' }}
                           </p>
                         }
-                        <small style="color: var(--bp-slate-gray); font-size: 10px;">{{ alert.trackingActive ? '📡 Tracking Activo' : 'Sin seguimiento' }}</small>
+                        <small style="color: var(--bp-slate-gray); font-size: 10px; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;">
+                          @if (alert.trackingActive) {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg> Tracking Activo
+                          } @else {
+                            Sin seguimiento
+                          }
+                        </small>
                       </div>
                     }
                   }
@@ -214,8 +280,14 @@ declare const L: any;
             <section class="telemetry-section">
               <header class="telemetry-header">
                 <strong>Historial de Telemetría <small>(backend)</small></strong>
-                <span class="telemetry-badge" [class.loading]="telemetryLoading" [class.error]="telemetryError">
-                  {{ telemetryLoading ? '⏳ Cargando…' : telemetryError ? '⚠️ Sin datos' : (telemetry.length + ' registros') }}
+                <span class="telemetry-badge" [class.loading]="telemetryLoading" [class.error]="telemetryError" style="display: inline-flex; align-items: center; gap: 4px;">
+                  @if (telemetryLoading) {
+                    <svg class="spin-anim" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Cargando…
+                  } @else if (telemetryError) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Sin datos
+                  } @else {
+                    {{ telemetry.length }} registros
+                  }
                 </span>
               </header>
 
@@ -241,7 +313,15 @@ declare const L: any;
                           <td>{{ rec.latitude ? (rec.latitude | number:'1.5-5') : '--' }}</td>
                           <td>{{ rec.longitude ? (rec.longitude | number:'1.5-5') : '--' }}</td>
                           <td class="anomaly-cell">
-                            {{ rec.visualData?.toUpperCase()?.includes('ANOMALY') ? '⚠️ Sí' : '✅ No' }}
+                            @if (rec.visualData?.toUpperCase()?.includes('ANOMALY')) {
+                              <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--bp-critical);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Sí
+                              </span>
+                            } @else {
+                              <span style="display: inline-flex; align-items: center; gap: 4px; color: #007a72;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> No
+                              </span>
+                            }
                           </td>
                         </tr>
                       }
@@ -345,6 +425,8 @@ declare const L: any;
       .camera-frame { min-height: 210px; }
       .full-col { grid-column: 1; }
     }
+    .spin-anim { animation: bp-spin 1.2s linear infinite; display: inline-block; }
+    @keyframes bp-spin { to { transform: rotate(360deg); } }
   `],
 })
 export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy {
@@ -394,6 +476,10 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
   marker: any;
   circle: any;
 
+  // ── Webcam state ───────────────────────────────────────────────────────
+  useWebcam = false;
+  webcamStream: MediaStream | null = null;
+
   constructor(
     private readonly getTelemetry: GetTelemetryByTargetUseCase,
     private readonly processTelemetry: ProcessTelemetryUseCase,
@@ -417,6 +503,7 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
     }
     if (openChanged && !this.open) {
       this.stopPolling();
+      this.stopWebcam();
       this.telemetry = [];
       this.telemetryError = false;
       this.clearAnimalMarkers();
@@ -429,6 +516,36 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
 
   ngOnDestroy(): void {
     this.stopPolling();
+    this.stopWebcam();
+  }
+
+  async toggleWebcam() {
+    this.useWebcam = !this.useWebcam;
+    if (this.useWebcam) {
+      try {
+        this.webcamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        setTimeout(() => {
+          const videoEl = document.getElementById('webcam-video') as HTMLVideoElement;
+          if (videoEl && this.webcamStream) {
+            videoEl.srcObject = this.webcamStream;
+          }
+        }, 100);
+      } catch (err) {
+        console.error('Error accessing webcam', err);
+        alert('No se pudo acceder a la cámara del dispositivo.');
+        this.useWebcam = false;
+      }
+    } else {
+      this.stopWebcam();
+    }
+  }
+
+  stopWebcam() {
+    if (this.webcamStream) {
+      this.webcamStream.getTracks().forEach(track => track.stop());
+      this.webcamStream = null;
+    }
+    this.useWebcam = false;
   }
 
   async loadZoneAnimals(): Promise<void> {
@@ -550,10 +667,10 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
   }
 
   get visualStatusLabel(): string {
-    if (this.telemetryLoading) return '…';
+    if (this.telemetryLoading) return 'Cargando…';
     const latest = this.latestTelemetry;
-    if (!latest || !latest.visualData) return '— Sin datos';
-    return latest.visualData.toUpperCase().includes('ANOMALY') ? '⚠️ Anomalía detectada' : '✅ En rango';
+    if (!latest || !latest.visualData) return 'Sin datos';
+    return latest.visualData.toUpperCase().includes('ANOMALY') ? 'Anomalía detectada' : 'En rango';
   }
 
   get zoneAlerts(): PerimeterAlert[] {

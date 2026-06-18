@@ -12,7 +12,7 @@ import { AddMonitoringZoneModalComponent } from './components/add-monitoring-zon
 import { MonitoringZoneDetailModalComponent } from './components/monitoring-zone-detail-modal.component';
 
 /** How often to poll the backend for new telemetry (ms). */
-const POLL_INTERVAL_MS = 5_000;
+const POLL_INTERVAL_MS = 60_000;
 
 interface LiveZoneReading {
   temperatureC: number | null;
@@ -52,7 +52,10 @@ interface LiveZoneReading {
           }
         </span>
       } @else {
-        <span>⚠ Backend no disponible — esperando conexión…</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          Backend no disponible — esperando conexión…
+        </span>
       }
     </div>
 
@@ -84,7 +87,10 @@ interface LiveZoneReading {
               <span class="state"><i class="metric-icon status"></i>STATUS <strong>{{ ('states.' + zone.status) | translate }}</strong></span>
             </div>
             @if (liveData[zone.id]?.updatedAt) {
-              <p class="zone-timestamp">🕒 {{ formatTime(liveData[zone.id].updatedAt) }}</p>
+              <p class="zone-timestamp" style="display: inline-flex; align-items: center; gap: 4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; color: var(--bp-slate-gray);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {{ formatTime(liveData[zone.id].updatedAt) }}
+              </p>
             }
             <button class="detail-button" type="button" (click)="selectedZone = zone">{{ 'monitoring.viewDetail' | translate }}</button>
           </article>
@@ -105,17 +111,29 @@ interface LiveZoneReading {
 
             <!-- Perimeter Alerts -->
             @if (apiLoading) {
-              <p class="api-status loading">⏳ Conectando…</p>
+              <p class="api-status loading" style="display: inline-flex; align-items: center; gap: 6px;">
+                <svg class="spin-anim" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+                Conectando…
+              </p>
             } @else if (apiError) {
-              <p class="api-status error">⚠️ Backend no disponible</p>
+              <p class="api-status error" style="display: inline-flex; align-items: center; gap: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Backend no disponible
+              </p>
             } @else {
               @for (pa of perimeterAlerts; track pa.id) {
                 <article [class.critical]="pa.isBreachConfirmed && pa.trackingActive" [class.resolved]="!pa.isBreachConfirmed && !pa.trackingActive" class="perimeter-alert">
                   <div class="pa-header">
                     <strong>Brecha de Perímetro</strong>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                      <span class="pa-badge" [class.tracking]="pa.trackingActive" [class.confirmed]="pa.isBreachConfirmed && !pa.trackingActive" [class.resolved]="!pa.isBreachConfirmed && !pa.trackingActive">
-                        {{ pa.trackingActive ? '📡 Tracking' : pa.isBreachConfirmed ? '⚠️ Confirmada' : '✅ Resuelta' }}
+                      <span class="pa-badge" [class.tracking]="pa.trackingActive" [class.confirmed]="pa.isBreachConfirmed && !pa.trackingActive" [class.resolved]="!pa.isBreachConfirmed && !pa.trackingActive" style="display: inline-flex; align-items: center; gap: 4px;">
+                        @if (pa.trackingActive) {
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg> Tracking
+                        } @else if (pa.isBreachConfirmed) {
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Confirmada
+                        } @else {
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resuelta
+                        }
                       </span>
                       @if (!pa.isBreachConfirmed && !pa.trackingActive) {
                         <button class="dismiss-btn" (click)="dismissAlert(pa)" [disabled]="actionLoading === pa.id" title="Descartar alerta">×</button>
@@ -124,17 +142,28 @@ interface LiveZoneReading {
                   </div>
                   <p class="pa-target">Target: <code>{{ pa.targetId.slice(0, 8) }}…</code></p>
                   @if (pa.currentCoordinates) {
-                    <p class="pa-coords">📍 {{ pa.currentCoordinates.latitude | number:'1.4-4' }}, {{ pa.currentCoordinates.longitude | number:'1.4-4' }}</p>
+                    <p class="pa-coords" style="display: inline-flex; align-items: center; gap: 4px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                      {{ pa.currentCoordinates.latitude | number:'1.4-4' }}, {{ pa.currentCoordinates.longitude | number:'1.4-4' }}
+                    </p>
                   }
                   <div class="pa-actions">
                     @if (pa.isBreachConfirmed && !pa.trackingActive) {
-                      <button class="pa-btn track" (click)="enableTracking(pa)" [disabled]="actionLoading === pa.id">
-                        {{ actionLoading === pa.id ? '…' : '📡 Tracking' }}
+                      <button class="pa-btn track" (click)="enableTracking(pa)" [disabled]="actionLoading === pa.id" style="display: inline-flex; align-items: center; gap: 4px;">
+                        @if (actionLoading === pa.id) {
+                          …
+                        } @else {
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg> Tracking
+                        }
                       </button>
                     }
                     @if (pa.isBreachConfirmed) {
-                      <button class="pa-btn resolve" (click)="resolveAlert(pa)" [disabled]="actionLoading === pa.id">
-                        {{ actionLoading === pa.id ? '…' : '✔ Resolver' }}
+                      <button class="pa-btn resolve" (click)="resolveAlert(pa)" [disabled]="actionLoading === pa.id" style="display: inline-flex; align-items: center; gap: 4px;">
+                        @if (actionLoading === pa.id) {
+                          …
+                        } @else {
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resolver
+                        }
                       </button>
                     }
                   </div>
@@ -143,7 +172,10 @@ interface LiveZoneReading {
             }
 
             @if (allAlerts.length === 0 && perimeterAlerts.length === 0 && !apiLoading && !apiError) {
-              <p class="api-status ok">✅ Sin notificaciones activas</p>
+              <p class="api-status ok" style="display: inline-flex; align-items: center; gap: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                Sin notificaciones activas
+              </p>
             }
           </div>
         </bp-card>
@@ -267,6 +299,8 @@ interface LiveZoneReading {
     .device-summary small.warn { background: #fff1f1; color: var(--bp-critical); }
     @media (max-width: 1100px) { .monitoring-layout { grid-template-columns: 1fr; } .side-stack { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 760px) { .zone-cards, .side-stack { grid-template-columns: 1fr; } }
+    .spin-anim { animation: bp-spin 1.2s linear infinite; }
+    @keyframes bp-spin { to { transform: rotate(360deg); } }
   `],
 })
 export class MonitoringPage implements OnInit, OnDestroy {

@@ -47,7 +47,9 @@ import { AccessRequestsModalComponent, AddUserModalComponent, EditShelterDataMod
     <section class="users-card surface-card">
       @if (!hasShelter) {
         <div class="locked-overlay">
-          <span class="lock-icon">🔒</span>
+          <span class="lock-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--bp-slate-gray);"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </span>
           <p>Registra un refugio para administrar usuarios y permisos</p>
         </div>
       }
@@ -125,7 +127,7 @@ import { AccessRequestsModalComponent, AddUserModalComponent, EditShelterDataMod
 
     /* Locked overlay & create shelter aesthetics */
     .locked-overlay { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 10; border-radius: 12px; text-align: center; padding: 20px; }
-    .lock-icon { font-size: 28px; }
+    .lock-icon { display: inline-flex; align-items: center; justify-content: center; }
     .locked-overlay p { margin: 0; font-weight: 700; color: var(--bp-slate-gray); font-size: 14px; }
     .create-shelter-card { display: flex; flex-direction: column; justify-content: space-between; }
     .create-shelter-content { margin-top: 15px; display: grid; gap: 14px; }

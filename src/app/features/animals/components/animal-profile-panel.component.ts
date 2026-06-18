@@ -60,7 +60,8 @@ declare const L: any;
 
             <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--bp-border); display: flex; justify-content: flex-end;">
               <button type="button" (click)="deleteAnimal()" style="border: 0; background: transparent; color: #e53e3e; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                🗑️ Eliminar animal
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                Eliminar animal
               </button>
             </div>
           </section>
@@ -88,11 +89,15 @@ declare const L: any;
 
               <div class="dispenser-actions">
                 <button class="btn-schedule" [class.active]="scheduleActive" (click)="toggleSchedule()" [disabled]="schedulingLoading">
-                  <span class="icon">⏰</span>
+                  <span class="icon" style="display: inline-flex; align-items: center; margin-right: 4px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  </span>
                   {{ scheduleActive ? 'Desactivar horario' : 'Activar por horario' }}
                 </button>
                 <button class="btn-manual" (click)="triggerManual()" [disabled]="manualDispensing">
-                  <span class="icon">⚡</span>
+                  <span class="icon" style="display: inline-flex; align-items: center; margin-right: 4px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  </span>
                   {{ manualDispensing ? 'Dispensando...' : 'Dispensación manual' }}
                 </button>
               </div>
@@ -136,7 +141,10 @@ declare const L: any;
           <!-- ── GPS Collar Assignment & Simulation Controls ── -->
           <section class="clinical" style="margin-top: 14px;">
             <div class="section-title">
-              <h3>📡 Collar GPS Asignado</h3>
+              <h3 style="display: inline-flex; align-items: center; gap: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--bp-action-blue);"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg>
+                Collar GPS Asignado
+              </h3>
             </div>
             
             <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
@@ -151,20 +159,33 @@ declare const L: any;
                 <div style="position: relative; width: 100%; height: 250px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--bp-border); overflow: hidden; z-index: 1;">
                   <div id="profile-map" style="width: 100%; height: 100%;"></div>
                 </div>
-                <p style="font-size: 11px; color: var(--bp-slate-gray); margin: 0 0 8px 0; padding: 6px; background: #f7fafc; border-radius: 4px; line-height: 1.4; border: 1px solid var(--bp-border);">
-                  💡 Haz clic en el mapa o arrastra el marcador para configurar la ubicación base del GPS en el Edge.
+                <p style="font-size: 11px; color: var(--bp-slate-gray); margin: 0 0 8px 0; padding: 6px; background: #f7fafc; border-radius: 4px; line-height: 1.4; border: 1px solid var(--bp-border); display: inline-flex; align-items: flex-start; gap: 4px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #e68a00; flex-shrink: 0; margin-top: 2px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1 .5 2.2 1.5 3.1.7.7 1.3 1.5 1.5 2.5"></path><line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="22" x2="14" y2="22"></line></svg>
+                  <span>Haz clic en el mapa o arrastra el marcador para configurar la ubicación base del GPS en el Edge.</span>
                 </p>
 
                 <button type="button" (click)="toggleSimulation()" style="width: 100%; height: 36px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; border-radius: 6px; border: 0; cursor: pointer; transition: background 0.2s;" [style.background]="isSimulating ? '#e53e3e' : 'var(--bp-action-blue)'" [style.color]="'#fff'">
-                  <span>{{ isSimulating ? '⏸️ Detener movimiento' : '▶️ Iniciar movimiento' }}</span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    @if (isSimulating) {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> Detener movimiento
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Iniciar movimiento
+                    }
+                  </span>
                 </button>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                   <button type="button" (click)="returnToStart()" style="height: 34px; border: 1px solid #cbd5e0; border-radius: 6px; background: #fff; color: var(--bp-dark-navy); font-weight: 800; font-size: 11px; cursor: pointer;">
-                    🔄 Regresar al inicio
+                    <span style="display: inline-flex; align-items: center; gap: 4px; justify-content: center; width: 100%;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                      Regresar al inicio
+                    </span>
                   </button>
                   <button type="button" (click)="sendFarAway()" style="height: 34px; border: 1px solid #feb2b2; border-radius: 6px; background: #fff5f5; color: #c53030; font-weight: 800; font-size: 11px; cursor: pointer;">
-                    🚨 Enviar muy lejos
+                    <span style="display: inline-flex; align-items: center; gap: 4px; justify-content: center; width: 100%;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                      Enviar muy lejos
+                    </span>
                   </button>
                 </div>
 
@@ -183,15 +204,27 @@ declare const L: any;
           <section class="clinical">
             <div class="section-title">
               <h3>{{ 'nav.alerts' | translate }}</h3>
-              <button type="button" (click)="loadAlerts()">🔄 Actualizar</button>
+              <button type="button" (click)="loadAlerts()" style="display: inline-flex; align-items: center; gap: 4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                Actualizar
+              </button>
             </div>
 
             @if (alertsLoading) {
-              <p style="font-size: 12px; color: var(--bp-slate-gray); margin-top: 8px;">⏳ Cargando alertas...</p>
+              <p style="font-size: 12px; color: var(--bp-slate-gray); margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;">
+                <svg class="spin-anim" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+                Cargando alertas...
+              </p>
             } @else if (alertsError) {
-              <p style="font-size: 12px; color: var(--bp-critical); margin-top: 8px;">⚠️ Servicio no disponible</p>
+              <p style="font-size: 12px; color: var(--bp-critical); margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Servicio no disponible
+              </p>
             } @else if (activeAnimalAlerts.length === 0) {
-              <p style="font-size: 12px; color: var(--bp-slate-gray); margin-top: 8px;">✅ Sin alertas activas para este animal.</p>
+              <p style="font-size: 12px; color: var(--bp-slate-gray); margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; color: #007a72;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                Sin alertas activas para este animal.
+              </p>
             } @else {
               <div style="display: grid; gap: 10px; margin-top: 10px;">
                 @for (pa of activeAnimalAlerts; track pa.id) {
@@ -199,8 +232,14 @@ declare const L: any;
                     <div class="pa-header">
                       <strong>Brecha de Perímetro</strong>
                       <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="pa-badge" [class.tracking]="pa.trackingActive" [class.confirmed]="pa.isBreachConfirmed && !pa.trackingActive" [class.resolved]="!pa.isBreachConfirmed && !pa.trackingActive">
-                          {{ pa.trackingActive ? '📡 Tracking' : pa.isBreachConfirmed ? '⚠️ Confirmada' : '✅ Resuelta' }}
+                        <span class="pa-badge" [class.tracking]="pa.trackingActive" [class.confirmed]="pa.isBreachConfirmed && !pa.trackingActive" [class.resolved]="!pa.isBreachConfirmed && !pa.trackingActive" style="display: inline-flex; align-items: center; gap: 4px;">
+                          @if (pa.trackingActive) {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg> Tracking
+                          } @else if (pa.isBreachConfirmed) {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Confirmada
+                          } @else {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resuelta
+                          }
                         </span>
                         @if (!pa.isBreachConfirmed && !pa.trackingActive) {
                           <button class="dismiss-btn" (click)="dismissAlert(pa)" [disabled]="actionLoading === pa.id" title="Descartar alerta">×</button>
@@ -209,17 +248,28 @@ declare const L: any;
                     </div>
                     <p class="pa-target">Target: <code>{{ pa.targetId.slice(0, 8) }}…</code></p>
                     @if (pa.currentCoordinates) {
-                      <p class="pa-coords">📍 {{ pa.currentCoordinates.latitude | number:'1.4-4' }}, {{ pa.currentCoordinates.longitude | number:'1.4-4' }}</p>
+                      <p class="pa-coords" style="display: inline-flex; align-items: center; gap: 4px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        {{ pa.currentCoordinates.latitude | number:'1.4-4' }}, {{ pa.currentCoordinates.longitude | number:'1.4-4' }}
+                      </p>
                     }
                     <div class="pa-actions">
                       @if (pa.isBreachConfirmed && !pa.trackingActive) {
-                        <button class="pa-btn track" (click)="enableTracking(pa)" [disabled]="actionLoading === pa.id">
-                          {{ actionLoading === pa.id ? '…' : '📡 Tracking' }}
+                        <button class="pa-btn track" (click)="enableTracking(pa)" [disabled]="actionLoading === pa.id" style="display: inline-flex; align-items: center; gap: 4px;">
+                          @if (actionLoading === pa.id) {
+                            …
+                          } @else {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg> Tracking
+                          }
                         </button>
                       }
                       @if (pa.isBreachConfirmed) {
-                        <button class="pa-btn resolve" (click)="resolveAlert(pa)" [disabled]="actionLoading === pa.id">
-                          {{ actionLoading === pa.id ? '…' : '✔ Resolver' }}
+                        <button class="pa-btn resolve" (click)="resolveAlert(pa)" [disabled]="actionLoading === pa.id" style="display: inline-flex; align-items: center; gap: 4px;">
+                          @if (actionLoading === pa.id) {
+                            …
+                          } @else {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resolver
+                          }
                         </button>
                       }
                     </div>
@@ -291,6 +341,8 @@ declare const L: any;
     .pa-btn:disabled { opacity: .5; cursor: default; }
     .pa-btn.track { background: #d6f0ff; color: #005f8e; }
     .pa-btn.resolve { background: #d8fbf4; color: #007a72; }
+    .spin-anim { animation: bp-spin 1.2s linear infinite; display: inline-block; }
+    @keyframes bp-spin { to { transform: rotate(360deg); } }
   `],
 })
 export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy {
