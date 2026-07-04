@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Alert, Animal, FeedingPlan, Veterinarian, User, Shelter, MonitoringZone } from '../../domain/models/bluepatitas.models';
+import { Alert, Animal, FeedingPlan, MonitoringZone, Shelter, User, Veterinarian } from '../../domain/models/bluepatitas.models';
 import { AlertRepository, AnimalRepository, DeviceRepository, FeedingRepository, ReportRepository, ShelterRepository, UserRepository, VeterinarianRepository } from '../../domain/repositories/repository.tokens';
 import { mockAlerts, mockAnimals, mockDevices, mockFeedingEvents, mockFeedingPlans, mockReports, mockShelter, mockUsers, mockVeterinarians, mockZones } from '../mock/mock-bluepatitas.data';
 
@@ -14,23 +14,23 @@ export class MockAnimalRepository implements AnimalRepository {
   }
 
   async createAnimal(animal: Omit<Animal, 'id'>): Promise<Animal> {
-    const newAnimal = { ...animal, id: `animal-${Date.now()}` } as Animal;
-    mockAnimals.push(newAnimal);
-    return newAnimal;
+    const created = { ...animal, id: `animal-${Date.now()}` };
+    mockAnimals.push(created);
+    return structuredClone(created);
   }
 
   async updateAnimal(animal: Animal): Promise<Animal> {
-    const idx = mockAnimals.findIndex((a) => a.id === animal.id);
-    if (idx !== -1) {
-      mockAnimals[idx] = animal;
+    const index = mockAnimals.findIndex((item) => item.id === animal.id);
+    if (index >= 0) {
+      mockAnimals[index] = animal;
     }
-    return animal;
+    return structuredClone(animal);
   }
 
   async deleteAnimal(id: string): Promise<void> {
-    const idx = mockAnimals.findIndex((a) => a.id === id);
-    if (idx !== -1) {
-      mockAnimals.splice(idx, 1);
+    const index = mockAnimals.findIndex((animal) => animal.id === id);
+    if (index >= 0) {
+      mockAnimals.splice(index, 1);
     }
   }
 }
@@ -46,42 +46,29 @@ export class MockShelterRepository implements ShelterRepository {
   }
 
   async updateShelterSettings(shelter: Shelter): Promise<Shelter> {
-    mockShelter.name = shelter.name;
-    mockShelter.address = shelter.address;
-    mockShelter.phone = shelter.phone;
-    mockShelter.email = shelter.email;
-    mockShelter.city = shelter.city;
-    mockShelter.administrator = shelter.administrator;
+    Object.assign(mockShelter, shelter);
     return structuredClone(mockShelter);
   }
 
   async createMonitoringZone(zone: Omit<MonitoringZone, 'id'>): Promise<MonitoringZone> {
-    const newZone = {
-      ...zone,
-      id: `zone-${Date.now()}`,
-      status: zone.status || 'Active',
-      temperatureC: zone.temperatureC !== undefined ? zone.temperatureC : 22,
-      humidity: zone.humidity !== undefined ? zone.humidity : 50,
-      animalCount: zone.animalCount || 0,
-      cameraEnabled: zone.cameraEnabled !== undefined ? zone.cameraEnabled : true
-    } as MonitoringZone;
-    mockZones.push(newZone);
-    return structuredClone(newZone);
+    const created = { ...zone, id: `zone-${Date.now()}` };
+    mockZones.push(created);
+    return structuredClone(created);
   }
 
   async updateMonitoringZone(id: string, zone: Omit<MonitoringZone, 'id'>): Promise<MonitoringZone> {
-    const idx = mockZones.findIndex((z) => z.id === id);
-    const updated = { ...zone, id } as MonitoringZone;
-    if (idx !== -1) {
-      mockZones[idx] = updated;
+    const updated = { ...zone, id };
+    const index = mockZones.findIndex((item) => item.id === id);
+    if (index >= 0) {
+      mockZones[index] = updated;
     }
     return structuredClone(updated);
   }
 
   async deleteMonitoringZone(id: string): Promise<void> {
-    const idx = mockZones.findIndex((z) => z.id === id);
-    if (idx !== -1) {
-      mockZones.splice(idx, 1);
+    const index = mockZones.findIndex((zone) => zone.id === id);
+    if (index >= 0) {
+      mockZones.splice(index, 1);
     }
   }
 }
@@ -122,23 +109,23 @@ export class MockVeterinarianRepository implements VeterinarianRepository {
   }
 
   async createVeterinarian(vet: Omit<Veterinarian, 'id'>): Promise<Veterinarian> {
-    const newVet = { ...vet, id: `vet-${Date.now()}` } as Veterinarian;
-    mockVeterinarians.push(newVet);
-    return newVet;
+    const created = { ...vet, id: `vet-${Date.now()}` };
+    mockVeterinarians.push(created);
+    return structuredClone(created);
   }
 
   async updateVeterinarian(vet: Veterinarian): Promise<Veterinarian> {
-    const idx = mockVeterinarians.findIndex(v => v.id === vet.id);
-    if (idx !== -1) {
-      mockVeterinarians[idx] = vet;
+    const index = mockVeterinarians.findIndex((item) => item.id === vet.id);
+    if (index >= 0) {
+      mockVeterinarians[index] = vet;
     }
-    return vet;
+    return structuredClone(vet);
   }
 
   async deleteVeterinarian(id: string): Promise<void> {
-    const idx = mockVeterinarians.findIndex(v => v.id === id);
-    if (idx !== -1) {
-      mockVeterinarians.splice(idx, 1);
+    const index = mockVeterinarians.findIndex((vet) => vet.id === id);
+    if (index >= 0) {
+      mockVeterinarians.splice(index, 1);
     }
   }
 }
@@ -150,20 +137,14 @@ export class MockUserRepository implements UserRepository {
   }
 
   async createUser(user: Omit<User, 'id'>): Promise<User> {
-    const newUser = { ...user, id: `user-${Date.now()}` } as User;
-    mockUsers.push(newUser);
-    return newUser;
+    const created = { ...user, id: `user-${Date.now()}` };
+    mockUsers.push(created);
+    return structuredClone(created);
   }
 
-  async login(email: string, password: string): Promise<{ token: string; user: User } | null> {
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser) {
-      return {
-        token: `mock-token-${Date.now()}`,
-        user: foundUser
-      };
-    }
-    return null;
+  async login(email: string, _password: string): Promise<{ token: string; user: User } | null> {
+    const user = mockUsers.find((item) => item.email.toLowerCase() === email.toLowerCase());
+    return user ? { token: 'mock-token', user: structuredClone(user) } : null;
   }
 }
 
