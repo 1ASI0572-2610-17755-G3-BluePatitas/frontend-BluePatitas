@@ -7,6 +7,7 @@ import { ApiFeedingPlan } from '../../../core/domain/models/feeding-api.models';
 import { PerimeterAlert } from '../../../core/domain/models/monitoring-api.models';
 import { GetPerimeterAlertsUseCase, EnableTrackingUseCase, ResolveAlertUseCase, DismissAlertUseCase } from '../../../core/application/use-cases/monitoring.use-cases';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { TranslationService } from '../../../core/i18n/translation.service';
 import { BpButtonComponent } from '../../../shared/components/bp-button/bp-button.component';
 import { StatusChipComponent } from '../../../shared/components/status-chip/status-chip.component';
 import { ANIMAL_REPOSITORY } from '../../../core/domain/repositories/repository.tokens';
@@ -42,8 +43,8 @@ declare const L: any;
         @if (activeTab === 'general') {
           <div class="stats">
             <span><b>{{ animal.weightKg }} kg</b><small>{{ 'animals.weight' | translate }}</small></span>
-            <span><b>{{ animal.species === 'Dog' ? 'Male' : 'Female' }}</b><small>{{ 'animals.sex' | translate }}</small></span>
-            <span><b>{{ animal.status === 'Healthy' ? 'Up to date' : 'Review' }}</b><small>{{ 'animals.vaccines' | translate }}</small></span>
+            <span><b>{{ (animal.species === 'Dog' ? 'animals.male' : 'animals.female') | translate }}</b><small>{{ 'animals.sex' | translate }}</small></span>
+            <span><b>{{ (animal.status === 'Healthy' ? 'animals.vaccinesUpToDate' : 'animals.vaccinesReview') | translate }}</b><small>{{ 'animals.vaccines' | translate }}</small></span>
           </div>
 
           <section class="clinical">
@@ -61,7 +62,7 @@ declare const L: any;
             <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--bp-border); display: flex; justify-content: flex-end;">
               <button type="button" (click)="deleteAnimal()" style="border: 0; background: transparent; color: #e53e3e; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                Eliminar animal
+                {{ 'animals.deleteAnimal' | translate }}
               </button>
             </div>
           </section>
@@ -92,17 +93,17 @@ declare const L: any;
                   <span class="icon" style="display: inline-flex; align-items: center; margin-right: 4px;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                   </span>
-                  {{ scheduleActive ? 'Desactivar horario' : 'Activar por horario' }}
+                  {{ (scheduleActive ? 'animals.disableSchedule' : 'animals.enableSchedule') | translate }}
                 </button>
                 <button class="btn-manual" (click)="triggerManual()" [disabled]="manualDispensing">
                   <span class="icon" style="display: inline-flex; align-items: center; margin-right: 4px;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                   </span>
-                  {{ manualDispensing ? 'Dispensando...' : 'Dispensación manual' }}
+                  {{ (manualDispensing ? 'animals.dispensing' : 'animals.manualDispense') | translate }}
                 </button>
               </div>
             } @else {
-              <p>No active diet plan found for this animal.</p>
+              <p>{{ 'animals.noActiveDiet' | translate }}</p>
             }
           </section>
         }
@@ -120,10 +121,10 @@ declare const L: any;
                 </select>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
                   <button type="button" class="btn-save" (click)="saveZone()" [disabled]="isSavingZone" style="height: 34px; border: 0; border-radius: 6px; background: var(--bp-action-blue); color: #fff; font-weight: 800; font-size: 12px; cursor: pointer;">
-                    {{ isSavingZone ? '...' : 'Guardar' }}
+                    {{ isSavingZone ? '...' : ('common.save' | translate) }}
                   </button>
                   <button type="button" class="btn-cancel" (click)="isChangingZone = false" style="height: 34px; border: 1px solid var(--bp-border); border-radius: 6px; background: #fff; color: var(--bp-dark-navy); font-weight: 800; font-size: 12px; cursor: pointer;">
-                    Cancelar
+                    {{ 'common.cancel' | translate }}
                   </button>
                 </div>
               </div>
@@ -131,7 +132,7 @@ declare const L: any;
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <h3 style="margin: 0; font-size: 22px; color: var(--bp-action-blue);">{{ zoneName }}</h3>
                 <button type="button" (click)="startChangeZone()" style="border: 0; background: transparent; color: var(--bp-action-blue); font-size: 12px; font-weight: 800; cursor: pointer;">
-                  Cambiar zona
+                  {{ 'animals.changeZone' | translate }}
                 </button>
               </div>
             }
@@ -143,33 +144,33 @@ declare const L: any;
             <div class="section-title">
               <h3 style="display: inline-flex; align-items: center; gap: 6px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--bp-action-blue);"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg>
-                Collar GPS Asignado
+                {{ 'animals.gpsAssigned' | translate }}
               </h3>
             </div>
             
             <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
               <input type="checkbox" id="gps-check" [(ngModel)]="hasGps" (change)="onGpsToggleChanged()" style="width: 18px; height: 18px; cursor: pointer;" />
-              <label for="gps-check" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">¿Tiene GPS asignado?</label>
+              <label for="gps-check" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">{{ 'animals.hasGps' | translate }}</label>
             </div>
 
             @if (hasGps) {
               <div class="simulation-controls" style="display: grid; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--bp-border);">
-                <span style="font-size: 11px; font-weight: 800; color: var(--bp-slate-gray); text-transform: uppercase;">Simulador de Movimiento GPS</span>
+                <span style="font-size: 11px; font-weight: 800; color: var(--bp-slate-gray); text-transform: uppercase;">{{ 'animals.gpsSimulator' | translate }}</span>
                 
                 <div style="position: relative; width: 100%; height: 250px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--bp-border); overflow: hidden; z-index: 1;">
                   <div id="profile-map" style="width: 100%; height: 100%;"></div>
                 </div>
                 <p style="font-size: 11px; color: var(--bp-slate-gray); margin: 0 0 8px 0; padding: 6px; background: #f7fafc; border-radius: 4px; line-height: 1.4; border: 1px solid var(--bp-border); display: inline-flex; align-items: flex-start; gap: 4px;">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #e68a00; flex-shrink: 0; margin-top: 2px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1 .5 2.2 1.5 3.1.7.7 1.3 1.5 1.5 2.5"></path><line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="22" x2="14" y2="22"></line></svg>
-                  <span>Haz clic en el mapa o arrastra el marcador para configurar la ubicación base del GPS en el Edge.</span>
+                  <span>{{ 'animals.gpsSimulatorHint' | translate }}</span>
                 </p>
 
                 <button type="button" (click)="toggleSimulation()" style="width: 100%; height: 36px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; border-radius: 6px; border: 0; cursor: pointer; transition: background 0.2s;" [style.background]="isSimulating ? '#e53e3e' : 'var(--bp-action-blue)'" [style.color]="'#fff'">
                   <span style="display: inline-flex; align-items: center; gap: 6px;">
                     @if (isSimulating) {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> Detener movimiento
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> {{ 'animals.stopMovement' | translate }}
                     } @else {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Iniciar movimiento
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> {{ 'animals.startMovement' | translate }}
                     }
                   </span>
                 </button>
@@ -178,21 +179,21 @@ declare const L: any;
                   <button type="button" (click)="returnToStart()" style="height: 34px; border: 1px solid #cbd5e0; border-radius: 6px; background: #fff; color: var(--bp-dark-navy); font-weight: 800; font-size: 11px; cursor: pointer;">
                     <span style="display: inline-flex; align-items: center; gap: 4px; justify-content: center; width: 100%;">
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                      Regresar al inicio
+                      {{ 'animals.returnToStart' | translate }}
                     </span>
                   </button>
                   <button type="button" (click)="sendFarAway()" style="height: 34px; border: 1px solid #feb2b2; border-radius: 6px; background: #fff5f5; color: #c53030; font-weight: 800; font-size: 11px; cursor: pointer;">
                     <span style="display: inline-flex; align-items: center; gap: 4px; justify-content: center; width: 100%;">
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                      Enviar muy lejos
+                      {{ 'animals.sendFarAway' | translate }}
                     </span>
                   </button>
                 </div>
 
                 @if (simLat !== null && simLng !== null) {
                   <div style="font-size: 11px; color: var(--bp-slate-gray); background: #f7fafc; padding: 6px 10px; border-radius: 4px; margin-top: 6px; border: 1px solid var(--bp-border);">
-                    <b>Lat:</b> {{ simLat | number:'1.6-6' }}<br>
-                    <b>Lng:</b> {{ simLng | number:'1.6-6' }}
+                    <b>{{ 'animals.lat' | translate }}:</b> {{ simLat | number:'1.6-6' }}<br>
+                    <b>{{ 'animals.lng' | translate }}:</b> {{ simLng | number:'1.6-6' }}
                   </div>
                 }
               </div>
@@ -206,39 +207,39 @@ declare const L: any;
               <h3>{{ 'nav.alerts' | translate }}</h3>
               <button type="button" (click)="loadAlerts()" style="display: inline-flex; align-items: center; gap: 4px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                Actualizar
+                {{ 'common.refresh' | translate }}
               </button>
             </div>
 
             @if (alertsLoading) {
               <p style="font-size: 12px; color: var(--bp-slate-gray); margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;">
                 <svg class="spin-anim" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
-                Cargando alertas...
+                {{ 'alerts.loading' | translate }}
               </p>
             } @else if (alertsError) {
               <p style="font-size: 12px; color: var(--bp-critical); margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                Servicio no disponible
+                {{ 'alerts.serviceUnavailable' | translate }}
               </p>
             } @else if (activeAnimalAlerts.length === 0) {
               <p style="font-size: 12px; color: var(--bp-slate-gray); margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; color: #007a72;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                Sin alertas activas para este animal.
+                {{ 'alerts.noActiveAlerts' | translate }}
               </p>
             } @else {
               <div style="display: grid; gap: 10px; margin-top: 10px;">
                 @for (pa of activeAnimalAlerts; track pa.id) {
                   <article [class.critical]="pa.isBreachConfirmed && pa.trackingActive" [class.resolved]="!pa.isBreachConfirmed && !pa.trackingActive" class="perimeter-alert">
                     <div class="pa-header">
-                      <strong>Brecha de Perímetro</strong>
+                      <strong>{{ 'alerts.perimeterBreach' | translate }}</strong>
                       <div style="display: flex; align-items: center; gap: 8px;">
                         <span class="pa-badge" [class.tracking]="pa.trackingActive" [class.confirmed]="pa.isBreachConfirmed && !pa.trackingActive" [class.resolved]="!pa.isBreachConfirmed && !pa.trackingActive" style="display: inline-flex; align-items: center; gap: 4px;">
                           @if (pa.trackingActive) {
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg> Tracking
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg> {{ 'alerts.tracking' | translate }}
                           } @else if (pa.isBreachConfirmed) {
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Confirmada
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> {{ 'alerts.confirmed' | translate }}
                           } @else {
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resuelta
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> {{ 'alerts.resolved' | translate }}
                           }
                         </span>
                         @if (!pa.isBreachConfirmed && !pa.trackingActive) {
@@ -259,7 +260,7 @@ declare const L: any;
                           @if (actionLoading === pa.id) {
                             …
                           } @else {
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg> Tracking
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><circle cx="12" cy="12" r="1"></circle></svg> {{ 'alerts.tracking' | translate }}
                           }
                         </button>
                       }
@@ -268,7 +269,7 @@ declare const L: any;
                           @if (actionLoading === pa.id) {
                             …
                           } @else {
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Resolver
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> {{ 'alerts.resolve' | translate }}
                           }
                         </button>
                       }
@@ -379,6 +380,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
   private readonly enableTrackingUseCase = inject(EnableTrackingUseCase);
   private readonly resolveAlertUseCase = inject(ResolveAlertUseCase);
   private readonly dismissAlertUseCase = inject(DismissAlertUseCase);
+  private readonly translationService = inject(TranslationService);
 
   perimeterAlerts: PerimeterAlert[] = [];
   alertsLoading = false;
@@ -429,7 +431,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       }
     } catch (err) {
       console.error('Failed to update animal zone', err);
-      alert('Error al actualizar la zona del animal.');
+      alert(this.translationService.translate('animals.errorUpdateZone'));
     } finally {
       this.isSavingZone = false;
     }
@@ -506,7 +508,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       this.perimeterAlerts = this.perimeterAlerts.map(item => item.id === pa.id ? updated : item);
     } catch (err) {
       console.error('Failed to enable tracking', err);
-      window.alert('Error al activar el tracking.');
+      window.alert(this.translationService.translate('alerts.serviceUnavailable'));
     } finally {
       this.actionLoading = null;
     }
@@ -519,7 +521,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       this.perimeterAlerts = this.perimeterAlerts.map(item => item.id === pa.id ? updated : item);
     } catch (err) {
       console.error('Failed to resolve alert', err);
-      window.alert('Error al resolver la alerta.');
+      window.alert(this.translationService.translate('alerts.serviceUnavailable'));
     } finally {
       this.actionLoading = null;
     }
@@ -532,7 +534,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       this.perimeterAlerts = this.perimeterAlerts.filter(item => item.id !== pa.id);
     } catch (err) {
       console.error('Failed to dismiss alert', err);
-      window.alert('Error al descartar la alerta.');
+      window.alert(this.translationService.translate('alerts.serviceUnavailable'));
     } finally {
       this.actionLoading = null;
     }
@@ -557,8 +559,8 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       }
 
       const currentZone = this.zones.find(z => z.id === this.animal?.zoneId);
-      const centerLat = currentZone?.geofenceLatitude ?? -12.046374;
-      const centerLng = currentZone?.geofenceLongitude ?? -77.042793;
+      const centerLat = currentZone?.geofenceLatitude ?? -12.103638802091739;
+      const centerLng = currentZone?.geofenceLongitude ?? -76.96249460429247;
       const radius = currentZone?.geofenceRadiusMeters ?? 100;
 
       const initialLat = this.simLat ?? centerLat;
@@ -648,7 +650,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       }
     } catch (err) {
       console.error('Failed to toggle simulation', err);
-      alert('Error al conectar con el simulador en el Edge Gateway');
+      alert(this.translationService.translate('animals.errorSimulatorEdge'));
     }
   }
 
@@ -665,7 +667,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       }
     } catch (err) {
       console.error('Failed to reset simulation', err);
-      alert('Error al restablecer la simulación');
+      alert(this.translationService.translate('animals.errorResetSimulation'));
     }
   }
 
@@ -682,7 +684,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       }
     } catch (err) {
       console.error('Failed to send far away', err);
-      alert('Error al alejar el collar GPS');
+      alert(this.translationService.translate('animals.errorFarAway'));
     }
   }
 
@@ -723,14 +725,14 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
 
   async deleteAnimal() {
     if (!this.animal) return;
-    const confirmed = confirm(`¿Estás seguro de que deseas eliminar a ${this.animal.name}?`);
+    const confirmed = confirm(this.translationService.translate('animals.confirmDelete') + this.animal.name + '?');
     if (confirmed) {
       try {
         await this.animalRepo.deleteAnimal(this.animal.id);
         this.animalDeleted.emit(this.animal.id);
       } catch (err) {
         console.error('Failed to delete animal', err);
-        alert('Error al eliminar el animal.');
+        alert(this.translationService.translate('animals.errorDelete'));
       }
     }
   }
@@ -755,7 +757,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       this.scheduleActive = res.activo;
     } catch (err) {
       console.error('Failed to toggle schedule on Edge Gateway', err);
-      alert('Error al conectar con el Edge Gateway');
+      alert(this.translationService.translate('animals.errorEdge'));
     } finally {
       this.schedulingLoading = false;
     }
@@ -765,10 +767,10 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
     this.manualDispensing = true;
     try {
       await this.http.post<any>('http://localhost:18090/api/dispensador/forzar_alimento', {}).toPromise();
-      alert('¡Comando de dispensación manual enviado con éxito!');
+      alert(this.translationService.translate('animals.manualDispenseSuccess'));
     } catch (err) {
       console.error('Failed to trigger manual dispensation', err);
-      alert('Error al enviar comando manual al Edge Gateway');
+      alert(this.translationService.translate('animals.errorManualDispense'));
     } finally {
       this.manualDispensing = false;
     }

@@ -460,8 +460,8 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
   editName = '';
   editMinTemp: number | null = null;
   editMaxTemp: number | null = null;
-  editLatitude = -12.046374;
-  editLongitude = -77.042793;
+  editLatitude = -12.103638802091739;
+  editLongitude = -76.96249460429247;
   editRadius = 100;
 
   // ── Alert view state ───────────────────────────────────────────────────
@@ -772,8 +772,8 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
       const existing = this.animalMarkers.find((item) => item.animalId === animal.id);
 
       if (isAssigned) {
-        const lat = this.edgeLat ?? this.zone?.geofenceLatitude ?? -12.046374;
-        const lng = this.edgeLng ?? this.zone?.geofenceLongitude ?? -77.042793;
+        const lat = this.edgeLat ?? this.zone?.geofenceLatitude ?? -12.103638802091739;
+        const lng = this.edgeLng ?? this.zone?.geofenceLongitude ?? -76.96249460429247;
 
         if (existing) {
           existing.marker.setLatLng([lat, lng]);
@@ -825,8 +825,8 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
     this.editName = this.zone?.name || '';
     this.editMinTemp = this.zone?.minTemperatureC ?? null;
     this.editMaxTemp = this.zone?.maxTemperatureC ?? null;
-    this.editLatitude = this.zone?.geofenceLatitude || -12.046374;
-    this.editLongitude = this.zone?.geofenceLongitude || -77.042793;
+    this.editLatitude = this.zone?.geofenceLatitude || -12.103638802091739;
+    this.editLongitude = this.zone?.geofenceLongitude || -76.96249460429247;
     this.editRadius = this.zone?.geofenceRadiusMeters || 100;
     this.initMapDeferred();
   }
@@ -895,8 +895,8 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
         ambientHumidity: this.formHumidity,
         visualData: this.formVisualData || undefined,
         // Mock current latitude & longitude slightly offset from geofence center for manual test
-        latitude: (this.zone.geofenceLatitude || -12.046374) + 0.0001,
-        longitude: (this.zone.geofenceLongitude || -77.042793) + 0.0001,
+        latitude: (this.zone.geofenceLatitude || -12.103638802091739) + 0.0001,
+        longitude: (this.zone.geofenceLongitude || -76.96249460429247) + 0.0001,
       });
       // Refresh history after posting
       await this.loadTelemetry(this.zone.targetId);

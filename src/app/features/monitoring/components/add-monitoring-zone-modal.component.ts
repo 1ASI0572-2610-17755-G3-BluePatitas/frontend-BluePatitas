@@ -69,8 +69,8 @@ export class AddMonitoringZoneModalComponent implements OnChanges {
   minTemperature = '';
   maxTemperature = '';
 
-  latitudeStr = '-12.046374';
-  longitudeStr = '-77.042793';
+  latitudeStr = '-12.103638802091739';
+  longitudeStr = '-76.96249460429247';
   radiusStr = '100';
 
   map: any;
@@ -78,14 +78,14 @@ export class AddMonitoringZoneModalComponent implements OnChanges {
   circle: any;
 
   get latitude(): number {
-    return parseFloat(this.latitudeStr) || -12.046374;
+    return parseFloat(this.latitudeStr) || -12.103638802091739;
   }
   set latitude(v: number) {
     this.latitudeStr = v.toFixed(6);
   }
 
   get longitude(): number {
-    return parseFloat(this.longitudeStr) || -77.042793;
+    return parseFloat(this.longitudeStr) || -76.96249460429247;
   }
   set longitude(v: number) {
     this.longitudeStr = v.toFixed(6);
@@ -195,8 +195,8 @@ export class AddMonitoringZoneModalComponent implements OnChanges {
     this.capacity = '';
     this.minTemperature = '';
     this.maxTemperature = '';
-    this.latitudeStr = '-12.046374';
-    this.longitudeStr = '-77.042793';
+    this.latitudeStr = '-12.103638802091739';
+    this.longitudeStr = '-76.96249460429247';
     this.radiusStr = '100';
     this.closed.emit();
   }

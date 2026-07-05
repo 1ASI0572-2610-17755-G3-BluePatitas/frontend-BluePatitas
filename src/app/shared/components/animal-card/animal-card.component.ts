@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { Animal } from '../../../core/domain/models/bluepatitas.models';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { TranslationService } from '../../../core/i18n/translation.service';
 import { StatusChipComponent } from '../status-chip/status-chip.component';
 
 @Component({
@@ -13,7 +14,7 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
       <div class="content">
         <strong>{{ animal.name }}</strong>
         <small>ID: {{ animal.id.toUpperCase() }}</small>
-        <span>{{ animal.species }} · {{ animal.age }}</span>
+        <span>{{ ('species.' + animal.species) | translate }} · {{ formatAge(animal.age) }}</span>
       </div>
       <bp-status-chip [status]="animal.status" />
       <footer>
@@ -40,11 +41,24 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
       .content { padding-right: 0; }
       bp-status-chip { position: static; grid-column: 2; grid-row: 2; justify-self: start; }
     }
-  `],
+  `]
 })
 export class AnimalCardComponent {
   @Input({ required: true }) animal!: Animal;
   @Input() selectedId = '';
   @Input() zoneLabel = '';
   @Output() selected = new EventEmitter<Animal>();
+
+  private translationService = inject(TranslationService);
+
+  formatAge(age: string): string {
+    if (!age) return age;
+    let formatted = age;
+    const isEs = this.translationService.currentLanguage() === 'es-419';
+    if (isEs) {
+      formatted = formatted.replace(/years/gi, 'años').replace(/year/gi, 'año');
+      formatted = formatted.replace(/months/gi, 'meses').replace(/month/gi, 'mes');
+    }
+    return formatted;
+  }
 }
