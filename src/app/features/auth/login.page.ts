@@ -5,6 +5,7 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { BpButtonComponent } from '../../shared/components/bp-button/bp-button.component';
 import { FormFieldComponent } from '../../shared/components/form-field/form-field.component';
 import { LoginUseCase } from '../../core/application/use-cases/bluepatitas.use-cases';
+import { FcmNotificationService } from '../../shared/services/fcm-notification.service';
 
 @Component({
   standalone: true,
@@ -52,7 +53,8 @@ export class LoginPage {
 
   constructor(
     private readonly loginUseCase: LoginUseCase,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly fcmService: FcmNotificationService
   ) {}
 
   async onSubmit(): Promise<void> {
@@ -68,6 +70,10 @@ export class LoginPage {
       if (result) {
         localStorage.setItem('token', result.token);
         localStorage.setItem('currentUser', JSON.stringify(result.user));
+        
+        // Request Notification permission and send FCM token to backend
+        this.fcmService.requestPermissionAndRegisterToken(result.user.id);
+
         this.router.navigate(['/dashboard']);
       } else {
         this.errorMessage = 'Usuario o contraseña incorrectos.';
