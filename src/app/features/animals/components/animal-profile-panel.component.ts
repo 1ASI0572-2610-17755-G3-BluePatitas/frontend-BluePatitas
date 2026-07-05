@@ -76,7 +76,7 @@ declare const L: any;
             </div>
             @if (activePlan) {
               <label>{{ 'animals.foodBrand' | translate }}</label>
-              <p>{{ activePlan.dietType.name }}</p>
+              <p>{{ formatDietName(activePlan.dietType.name) }}</p>
               <label>{{ 'animals.portion' | translate }}</label>
               <p>{{ activePlan.foodAmount.quantity }} {{ activePlan.foodAmount.unit }}</p>
               <label>{{ 'animals.dailyFrequency' | translate }}</label>
@@ -544,6 +544,19 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
     setTimeout(() => {
       this.initProfileMap();
     }, 100);
+  }
+
+  formatDietName(dietName: string): string {
+    if (!dietName) return dietName;
+    const isEs = this.translationService.currentLanguage() === 'es-419';
+    if (isEs) {
+      let formatted = dietName;
+      formatted = formatted.replace(/^Dry/i, this.translationService.translate('animals.dryFood'));
+      formatted = formatted.replace(/^Wet/i, this.translationService.translate('animals.wetFood'));
+      formatted = formatted.replace(/^Special/i, this.translationService.translate('animals.specialDiet'));
+      return formatted;
+    }
+    return dietName;
   }
 
   initProfileMap() {

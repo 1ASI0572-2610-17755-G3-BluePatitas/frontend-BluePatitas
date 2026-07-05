@@ -108,6 +108,8 @@
   "animals.weight": "Current weight",
   "animals.sex": "Sex",
   "animals.vaccines": "Vaccines",
+  "animals.vaccinesUpToDate": "Up to date",
+  "animals.vaccinesReview": "Review needed",
   "animals.clinicalDetails": "Clinical details",
   "animals.editProfile": "Edit profile",
   "animals.breedCross": "Breed / Cross",

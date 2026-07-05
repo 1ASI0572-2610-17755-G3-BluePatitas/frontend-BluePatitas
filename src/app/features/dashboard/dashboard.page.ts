@@ -4,6 +4,7 @@ import { GetAlertsUseCase, GetDevicesUseCase, GetMonitoringZonesUseCase, GetFeed
 import { GetAnimalsUseCase } from '../../core/application/use-cases/animal.use-cases';
 import { GetAllApiFeedingPlansUseCase } from '../../core/application/use-cases/feeding.api-use-cases';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { TranslationService } from '../../core/i18n/translation.service';
 import { BpButtonComponent } from '../../shared/components/bp-button/bp-button.component';
 import { BpCardComponent } from '../../shared/components/bp-card/bp-card.component';
 import { AlertCardComponent } from '../../shared/components/alert-card/alert-card.component';
@@ -83,7 +84,7 @@ interface DashboardFeedingEvent {
                     {{ event.animalName }}
                   </td>
                   <td>{{ event.time }}</td>
-                  <td><span class="pill">{{ event.dietName }}</span></td>
+                  <td><span class="pill">{{ formatDietName(event.dietName) }}</span></td>
                   <td>{{ event.confirmed ? '✓' : '✗' }}</td>
                 </tr>
               } @empty {
@@ -170,6 +171,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     private readonly getFeedingEvents: GetFeedingEventsUseCase,
     private readonly getFeedingPlans: GetFeedingPlansUseCase,
     private readonly getAllApiPlans: GetAllApiFeedingPlansUseCase,
+    private readonly translationService: TranslationService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -184,6 +186,20 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (this.refreshIntervalId) {
       clearInterval(this.refreshIntervalId);
     }
+  }
+
+  formatDietName(dietName: string): string {
+    if (!dietName) return dietName;
+    const isEs = this.translationService.currentLanguage() === 'es-419';
+    if (isEs) {
+      let formatted = dietName;
+      // Reemplazamos la palabra clave original por la traducción
+      formatted = formatted.replace(/^Dry/i, this.translationService.translate('animals.dryFood'));
+      formatted = formatted.replace(/^Wet/i, this.translationService.translate('animals.wetFood'));
+      formatted = formatted.replace(/^Special/i, this.translationService.translate('animals.specialDiet'));
+      return formatted;
+    }
+    return dietName;
   }
 
   async loadData(): Promise<void> {
