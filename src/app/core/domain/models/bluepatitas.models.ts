@@ -1,6 +1,7 @@
 export type HealthStatus = 'Healthy' | 'Warning' | 'Critical';
 export type DeviceStatus = 'Active' | 'Low Battery' | 'Disconnected';
 export type AlertType = 'High temperature' | 'Low temperature' | 'High humidity' | 'Geofence exit' | 'Feeding not confirmed' | 'Device offline';
+export type AppRole = 'SHELTER_ADMIN' | 'VETERINARIAN' | 'CARETAKER' | 'UNKNOWN' | 'Administrator' | 'Veterinarian' | 'Caretaker';
 
 export interface Shelter {
   id: string;
@@ -96,7 +97,12 @@ export interface Veterinarian {
 export interface User {
   id: string;
   name: string;
-  role: 'Administrator' | 'Veterinarian' | 'Caretaker';
+  role: AppRole;
+  roles?: string[];
+  firstName?: string;
+  lastName?: string;
+  shelterId?: string;
+  shelterName?: string;
   email: string;
   status: 'Active' | 'Warning';
 }

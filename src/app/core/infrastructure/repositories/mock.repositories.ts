@@ -146,6 +146,11 @@ export class MockUserRepository implements UserRepository {
     const user = mockUsers.find((item) => item.email.toLowerCase() === email.toLowerCase());
     return user ? { token: 'mock-token', user: structuredClone(user) } : null;
   }
+
+  async redeemVeterinarianCode(_payload: { code: string; password: string }): Promise<{ token: string; user: User }> {
+    const user = mockUsers.find((item) => item.role === 'Veterinarian' || item.role === 'VETERINARIAN') ?? mockUsers[0];
+    return { token: 'mock-token', user: structuredClone(user) };
+  }
 }
 
 @Injectable()

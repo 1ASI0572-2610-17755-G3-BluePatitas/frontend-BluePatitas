@@ -1,6 +1,70 @@
 import { inject, Injectable } from '@angular/core';
 import { VETERINARY_API_REPOSITORY } from '../../domain/repositories/veterinary-repository.token';
-import { AddRecommendationRequest, CreateObservationRequest } from '../../domain/models/veterinary-api.models';
+import { AddRecommendationRequest, CreateObservationRequest, InviteVeterinarianRequest } from '../../domain/models/veterinary-api.models';
+
+@Injectable({ providedIn: 'root' })
+export class GetAdminVeterinariansUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute() {
+    return this.repository.getVeterinarians();
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class InviteVeterinarianUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute(request: InviteVeterinarianRequest) {
+    return this.repository.inviteVeterinarian(request);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class GetVeterinarianAssignedAnimalsUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute(veterinarianId: number) {
+    return this.repository.getVeterinarianAnimals(veterinarianId);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class AssignAnimalToVeterinarianUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute(veterinarianId: number, animalId: string) {
+    return this.repository.assignAnimalToVeterinarian(veterinarianId, animalId);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class UnassignAnimalFromVeterinarianUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute(veterinarianId: number, animalId: string) {
+    return this.repository.unassignAnimalFromVeterinarian(veterinarianId, animalId);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class GetVeterinaryDashboardUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute() {
+    return this.repository.getMyDashboard();
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class GetVeterinaryAnimalsUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute() {
+    return this.repository.getMyAnimals();
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class GetVeterinaryAnimalDetailUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute(animalId: string) {
+    return this.repository.getAnimalDetail(animalId);
+  }
+}
 
 /**
  * CreateApiObservationUseCase

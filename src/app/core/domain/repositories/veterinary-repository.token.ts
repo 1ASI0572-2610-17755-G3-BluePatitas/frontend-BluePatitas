@@ -1,31 +1,52 @@
 import { InjectionToken } from '@angular/core';
 import {
   AddRecommendationRequest,
+  AdminVeterinarianResource,
   ApiVeterinaryObservation,
-  CreateObservationRequest
+  CreateObservationRequest,
+  InvitedVeterinarianResource,
+  InviteVeterinarianRequest,
+  VeterinarianAnimalAssignmentResource,
+  VeterinaryAnimalDetailResource,
+  VeterinaryAnimalResource,
+  VeterinaryDashboardResource
 } from '../models/veterinary-api.models';
 
-/**
- * VeterinaryApiRepository
- *
- * Abstraction for all Veterinary-specific HTTP operations against
- * /api/veterinary/*. The concrete implementation lives in
- * HttpVeterinaryRepository (infrastructure layer).
- */
 export interface VeterinaryApiRepository {
-  /** POST /api/veterinary/observations — create a new clinical observation. */
+  /** GET /api/veterinary/veterinarians */
+  getVeterinarians(): Promise<AdminVeterinarianResource[]>;
+
+  /** POST /api/veterinary/veterinarians/invite */
+  inviteVeterinarian(request: InviteVeterinarianRequest): Promise<InvitedVeterinarianResource>;
+
+  /** GET /api/veterinary/veterinarians/{veterinarianId}/animals */
+  getVeterinarianAnimals(veterinarianId: number): Promise<VeterinaryAnimalResource[]>;
+
+  /** POST /api/veterinary/veterinarians/{veterinarianId}/animals/{animalId} */
+  assignAnimalToVeterinarian(veterinarianId: number, animalId: string): Promise<VeterinarianAnimalAssignmentResource>;
+
+  /** DELETE /api/veterinary/veterinarians/{veterinarianId}/animals/{animalId} */
+  unassignAnimalFromVeterinarian(veterinarianId: number, animalId: string): Promise<void>;
+
+  /** GET /api/veterinary/me/dashboard */
+  getMyDashboard(): Promise<VeterinaryDashboardResource>;
+
+  /** GET /api/veterinary/me/animals */
+  getMyAnimals(): Promise<VeterinaryAnimalResource[]>;
+
+  /** GET /api/veterinary/animals/{id} */
+  getAnimalDetail(animalId: string): Promise<VeterinaryAnimalDetailResource | ApiVeterinaryObservation[]>;
+
+  /** POST /api/veterinary/observations */
   createObservation(request: CreateObservationRequest): Promise<ApiVeterinaryObservation>;
 
-  /** GET /api/veterinary/observations/{id} — get a single observation. */
+  /** GET /api/veterinary/observations/{id} */
   getObservationById(id: string): Promise<ApiVeterinaryObservation>;
 
-  /** GET /api/veterinary/animals/{id} — list all observations for an animal. */
+  /** Compatibility alias for the current animal clinical history endpoint. */
   getObservationsByAnimalId(animalId: string): Promise<ApiVeterinaryObservation[]>;
 
-  /**
-   * POST /api/veterinary/observations/{id}/recommendation
-   * Adds a recommendation and triggers automatic FeedingPlan creation.
-   */
+  /** POST /api/veterinary/observations/{id}/recommendation */
   addRecommendation(observationId: string, request: AddRecommendationRequest): Promise<ApiVeterinaryObservation>;
 }
 

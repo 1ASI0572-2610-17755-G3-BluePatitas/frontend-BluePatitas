@@ -106,6 +106,14 @@ export class LoginUseCase {
 }
 
 @Injectable({ providedIn: 'root' })
+export class RedeemVeterinarianCodeUseCase {
+  private readonly repository: UserRepository = inject(USER_REPOSITORY);
+  execute(code: string, password: string) {
+    return this.repository.redeemVeterinarianCode({ code, password });
+  }
+}
+
+@Injectable({ providedIn: 'root' })
 export class UpdateShelterSettingsUseCase {
   private readonly repository: ShelterRepository = inject(SHELTER_REPOSITORY);
   execute(shelter: Shelter) {

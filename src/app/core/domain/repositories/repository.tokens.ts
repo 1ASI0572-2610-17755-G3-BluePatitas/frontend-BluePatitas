@@ -43,6 +43,7 @@ export interface UserRepository {
   getUsers(): Promise<User[]>;
   createUser(user: Omit<User, 'id'>): Promise<User>;
   login(email: string, password: string): Promise<{ token: string; user: User } | null>;
+  redeemVeterinarianCode(payload: { code: string; password: string }): Promise<{ token: string; user: User }>;
 }
 
 export interface ReportRepository {
