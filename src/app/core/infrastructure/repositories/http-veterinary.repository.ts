@@ -3,8 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import {
   AddRecommendationRequest,
+  AdminVeterinarianResource,
   ApiVeterinaryObservation,
   CreateObservationRequest,
+  InvitedVeterinarianResource,
+  InviteVeterinarianRequest,
+  VeterinarianAnimalAssignmentResource,
   VeterinaryAnimalDetailResource,
   VeterinaryAnimalResource,
   VeterinaryDashboardResource
@@ -18,6 +22,39 @@ export class HttpVeterinaryRepository implements VeterinaryApiRepository {
 
   constructor(private readonly http: HttpClient) {
     this.baseUrl = `${environment.apiBaseUrl.replace(/\/$/, '')}/api/veterinary`;
+  }
+
+  getVeterinarians(): Promise<AdminVeterinarianResource[]> {
+    return firstValueFrom(
+      this.http.get<AdminVeterinarianResource[]>(`${this.baseUrl}/veterinarians`)
+    );
+  }
+
+  inviteVeterinarian(request: InviteVeterinarianRequest): Promise<InvitedVeterinarianResource> {
+    return firstValueFrom(
+      this.http.post<InvitedVeterinarianResource>(`${this.baseUrl}/veterinarians/invite`, request)
+    );
+  }
+
+  getVeterinarianAnimals(veterinarianId: number): Promise<VeterinaryAnimalResource[]> {
+    return firstValueFrom(
+      this.http.get<VeterinaryAnimalResource[]>(`${this.baseUrl}/veterinarians/${veterinarianId}/animals`)
+    );
+  }
+
+  assignAnimalToVeterinarian(veterinarianId: number, animalId: string): Promise<VeterinarianAnimalAssignmentResource> {
+    return firstValueFrom(
+      this.http.post<VeterinarianAnimalAssignmentResource>(
+        `${this.baseUrl}/veterinarians/${veterinarianId}/animals/${animalId}`,
+        {}
+      )
+    );
+  }
+
+  unassignAnimalFromVeterinarian(veterinarianId: number, animalId: string): Promise<void> {
+    return firstValueFrom(
+      this.http.delete<void>(`${this.baseUrl}/veterinarians/${veterinarianId}/animals/${animalId}`)
+    );
   }
 
   getMyDashboard(): Promise<VeterinaryDashboardResource> {

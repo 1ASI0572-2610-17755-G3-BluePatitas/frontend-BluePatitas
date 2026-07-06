@@ -1,14 +1,33 @@
 import { InjectionToken } from '@angular/core';
 import {
   AddRecommendationRequest,
+  AdminVeterinarianResource,
   ApiVeterinaryObservation,
   CreateObservationRequest,
+  InvitedVeterinarianResource,
+  InviteVeterinarianRequest,
+  VeterinarianAnimalAssignmentResource,
   VeterinaryAnimalDetailResource,
   VeterinaryAnimalResource,
   VeterinaryDashboardResource
 } from '../models/veterinary-api.models';
 
 export interface VeterinaryApiRepository {
+  /** GET /api/veterinary/veterinarians */
+  getVeterinarians(): Promise<AdminVeterinarianResource[]>;
+
+  /** POST /api/veterinary/veterinarians/invite */
+  inviteVeterinarian(request: InviteVeterinarianRequest): Promise<InvitedVeterinarianResource>;
+
+  /** GET /api/veterinary/veterinarians/{veterinarianId}/animals */
+  getVeterinarianAnimals(veterinarianId: number): Promise<VeterinaryAnimalResource[]>;
+
+  /** POST /api/veterinary/veterinarians/{veterinarianId}/animals/{animalId} */
+  assignAnimalToVeterinarian(veterinarianId: number, animalId: string): Promise<VeterinarianAnimalAssignmentResource>;
+
+  /** DELETE /api/veterinary/veterinarians/{veterinarianId}/animals/{animalId} */
+  unassignAnimalFromVeterinarian(veterinarianId: number, animalId: string): Promise<void>;
+
   /** GET /api/veterinary/me/dashboard */
   getMyDashboard(): Promise<VeterinaryDashboardResource>;
 

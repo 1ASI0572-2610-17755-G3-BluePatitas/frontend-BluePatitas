@@ -41,6 +41,44 @@ export interface VeterinaryAnimalDetailResource extends VeterinaryAnimalResource
   observations?: ApiVeterinaryObservation[];
 }
 
+export interface AdminVeterinarianResource {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  shelterId: string;
+  shelterName: string;
+  status: 'PENDING' | 'ACTIVE' | string;
+  assignedAnimalsCount: number;
+}
+
+export interface InvitedVeterinarianResource {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  shelterId: string;
+  shelterName: string;
+  status: 'PENDING' | 'ACTIVE' | string;
+  invitationCode: string;
+}
+
+export interface InviteVeterinarianRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface VeterinarianAnimalAssignmentResource {
+  id: string;
+  veterinarianId: number;
+  animalId: string;
+  shelterId: string;
+  active: boolean;
+}
+
 /** Request body for POST /api/veterinary/observations */
 export interface CreateObservationRequest {
   animalId: string;
