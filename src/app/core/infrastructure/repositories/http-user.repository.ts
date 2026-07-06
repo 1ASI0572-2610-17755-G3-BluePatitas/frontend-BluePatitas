@@ -18,11 +18,13 @@ export class HttpUserRepository implements UserRepository {
 
   private readonly authUrl: string;
   private readonly usersUrl: string;
+  private readonly veterinaryUrl: string;
 
   constructor(private readonly http: HttpClient) {
     const base = environment.apiBaseUrl.replace(/\/$/, '');
     this.authUrl = `${base}/api/v1/authentication`;
     this.usersUrl = `${base}/api/v1/users`;
+    this.veterinaryUrl = `${base}/api/veterinary`;
   }
 
   async getUsers(): Promise<User[]> {
@@ -86,25 +88,9 @@ export class HttpUserRepository implements UserRepository {
       const response = await firstValueFrom(this.http.post<any>(`${this.authUrl}/sign-in`, payload));
 
       if (response && response.token) {
-        const roles = this.extractRoles(response);
-        const emailValue = response.email || email;
-        const firstName = response.firstName || response.givenName || '';
-        const lastName = response.lastName || response.familyName || '';
-        const user: User = {
-          id: String(response.id ?? response.userId ?? response.veterinarianId ?? ''),
-          name: `${firstName} ${lastName}`.trim() || response.name || emailValue.split('@')[0],
-          role: normalizeRole(roles),
-          roles,
-          firstName,
-          lastName,
-          shelterId: response.shelterId,
-          shelterName: response.shelterName,
-          email: emailValue,
-          status: 'Active'
-        };
         return {
           token: response.token,
-          user
+          user: this.mapAuthenticatedUser(response, email)
         };
       }
       return null;
@@ -112,6 +98,41 @@ export class HttpUserRepository implements UserRepository {
       console.error('Failed to login', error);
       return null;
     }
+  }
+
+  async redeemVeterinarianCode(payload: { code: string; password: string }): Promise<{ token: string; user: User }> {
+    const response = await firstValueFrom(
+      this.http.post<any>(`${this.veterinaryUrl}/veterinarians/redeem-code`, payload)
+    );
+
+    if (!response?.token) {
+      throw new Error('Redeem code response did not include a token');
+    }
+
+    return {
+      token: response.token,
+      user: this.mapAuthenticatedUser(response)
+    };
+  }
+
+  private mapAuthenticatedUser(response: any, fallbackEmail = ''): User {
+    const roles = this.extractRoles(response);
+    const emailValue = response.email || fallbackEmail;
+    const firstName = response.firstName || response.givenName || '';
+    const lastName = response.lastName || response.familyName || '';
+
+    return {
+      id: String(response.id ?? response.userId ?? response.veterinarianId ?? ''),
+      name: `${firstName} ${lastName}`.trim() || response.name || emailValue.split('@')[0],
+      role: normalizeRole(roles),
+      roles,
+      firstName,
+      lastName,
+      shelterId: response.shelterId,
+      shelterName: response.shelterName,
+      email: emailValue,
+      status: 'Active'
+    };
   }
 
   private extractRoles(source: any): string[] {
