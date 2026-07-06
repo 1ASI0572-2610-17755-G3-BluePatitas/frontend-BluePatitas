@@ -7,7 +7,7 @@
 export const environment = {
   production: false,
   /** Base URL of the BluePatitas Spring Boot backend (no trailing slash). */
-  apiBaseUrl: 'https://backend-bluepatitas.onrender.com',
+  apiBaseUrl: 'http://localhost:8080',
   firebaseConfig: {
     apiKey: "AIzaSyAXvxStbzvI65fMwuTFsX4wk87n6PIwcqk",
     authDomain: "flowtracknotis.firebaseapp.com",

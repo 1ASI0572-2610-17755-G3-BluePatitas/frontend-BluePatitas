@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Animal, MonitoringZone, Report } from '../../core/domain/models/bluepatitas.models';
-import { GetAnimalsUseCase, CreateAnimalUseCase } from '../../core/application/use-cases/animal.use-cases';
+import { GetAnimalsUseCase } from '../../core/application/use-cases/animal.use-cases';
 import { GetMonitoringZonesUseCase, GetReportsUseCase } from '../../core/application/use-cases/bluepatitas.use-cases';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { TranslationService } from '../../core/i18n/translation.service';
@@ -91,7 +91,6 @@ export class AnimalsPage implements OnInit {
 
   constructor(
     private readonly getAnimals: GetAnimalsUseCase,
-    private readonly createAnimal: CreateAnimalUseCase,
     private readonly getReports: GetReportsUseCase,
     private readonly getZones: GetMonitoringZonesUseCase,
     private readonly translationService: TranslationService,
@@ -132,8 +131,7 @@ export class AnimalsPage implements OnInit {
     this.reportsOpen = true;
   }
 
-  async onAnimalRegistered(animalData: Omit<Animal, 'id'>): Promise<void> {
-    const created = await this.createAnimal.execute(animalData);
+  onAnimalRegistered(created: Animal): void {
     this.animals = [...this.animals, created];
     if (!this.selectedAnimal) {
       this.selectedAnimal = created;

@@ -8,19 +8,33 @@ import { HttpAnimalRepository } from '../../../core/infrastructure/repositories/
 import { FormsModule } from '@angular/forms';
 import { ApiFeedingPlan, CreateFeedingPlanRequest } from '../../../core/domain/models/feeding-api.models';
 import { HttpFeedingRepository } from '../../../core/infrastructure/repositories/http-feeding.repository';
+import { firstValueFrom } from 'rxjs';
+import { CreateAnimalUseCase } from '../../../core/application/use-cases/animal.use-cases';
+import { MediaService } from '../../../core/infrastructure/services/media.service';
 
 @Component({
   selector: 'bp-add-animal-modal',
   standalone: true,
   imports: [TranslatePipe, BpModalComponent, FormFieldComponent, BpButtonComponent, FormsModule],
   template: `
-    <bp-modal [open]="open" [title]="'animals.add' | translate" size="compact" (closed)="closed.emit()">
+    <bp-modal [open]="open" [title]="'animals.add' | translate" size="compact" (closed)="handleClose()">
       <div class="modal-body animal-form">
         <div class="photo-upload">
           <span (click)="fileInput.click()" [style.backgroundImage]="previewUrl ? 'url(' + previewUrl + ')' : ''" [class.has-preview]="previewUrl"></span>
-          <small (click)="fileInput.click()">{{ 'animals.uploadPhoto' | translate }}</small>
+          <div class="photo-actions">
+            <small (click)="fileInput.click()">{{ 'animals.uploadPhoto' | translate }}</small>
+            @if (previewUrl) {
+              <button type="button" (click)="removeSelectedImage(fileInput)">{{ 'animals.removePhoto' | translate }}</button>
+            }
+          </div>
           <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" accept="image/*">
         </div>
+        @if (errorMessage) {
+          <p class="form-feedback error">{{ errorMessage | translate }}</p>
+        }
+        @if (successMessage) {
+          <p class="form-feedback success">{{ successMessage | translate }}</p>
+        }
         <bp-form-field [label]="'animals.name' | translate" placeholder="Firulais" [(value)]="name" />
         <bp-form-field [label]="'animals.species' | translate" [placeholder]="'animals.selectSpecies' | translate" [(value)]="species" />
         <bp-form-field [label]="'animals.breedCross' | translate" placeholder="Mixed breed" [(value)]="breed" />
@@ -57,8 +71,8 @@ import { HttpFeedingRepository } from '../../../core/infrastructure/repositories
           <bp-form-field [label]="'animals.entryDate' | translate" type="date" [(value)]="entryDate" />
         </div>
         <div class="modal-actions">
-          <bp-button variant="ghost" (clicked)="closed.emit()">{{ 'common.cancel' | translate }}</bp-button>
-          <bp-button prefix="+" (clicked)="register()">{{ 'animals.registerAnimal' | translate }}</bp-button>
+          <bp-button variant="ghost" (clicked)="handleClose()">{{ 'common.cancel' | translate }}</bp-button>
+          <bp-button prefix="+" (clicked)="register()">{{ (isSubmitting ? 'animals.savingAnimal' : 'animals.registerAnimal') | translate }}</bp-button>
         </div>
       </div>
     </bp-modal>
@@ -69,7 +83,12 @@ import { HttpFeedingRepository } from '../../../core/infrastructure/repositories
     .photo-upload span { width: 88px; height: 88px; border-radius: 50%; border: 1px dashed #7d6b91; background: #f3eef6; position: relative; cursor: pointer; background-size: cover; background-position: center; }
     .photo-upload span::before { content: '+'; position: absolute; inset: 0; display: grid; place-items: center; color: #7d6b91; font-size: 28px; font-weight: 700; }
     .photo-upload span.has-preview::before { display: none; }
+    .photo-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
     .photo-upload small { color: var(--bp-action-blue); font-size: 11px; font-weight: 700; cursor: pointer; }
+    .photo-actions button { border: 0; background: transparent; color: var(--bp-critical); font-size: 11px; font-weight: 800; cursor: pointer; padding: 0; }
+    .form-feedback { margin: 0; border-radius: 10px; padding: 10px 12px; font-size: 12px; font-weight: 700; }
+    .form-feedback.error { background: rgba(217, 48, 37, .08); color: var(--bp-critical); border: 1px solid rgba(217, 48, 37, .16); }
+    .form-feedback.success { background: rgba(87, 182, 95, .1); color: #1f7a34; border: 1px solid rgba(87, 182, 95, .2); }
     .field-block label { display: block; margin-bottom: 7px; color: var(--bp-dark-navy); font-size: 12px; font-weight: 700; }
     .segmented { display: grid; grid-template-columns: 1fr 1fr; border-radius: 10px; background: #eee8ef; padding: 4px; }
     .segmented button { min-height: 32px; border: 0; border-radius: 7px; background: transparent; color: var(--bp-slate-gray); cursor: pointer; }
@@ -114,9 +133,11 @@ export class AddAnimalModalComponent {
 
   @Input() zones: MonitoringZone[] = [];
   @Output() closed = new EventEmitter<void>();
-  @Output() registered = new EventEmitter<Omit<Animal, 'id'>>();
+  @Output() registered = new EventEmitter<Animal>();
 
-  private readonly animalRepo = inject(HttpAnimalRepository);
+  private readonly mediaService = inject(MediaService);
+  private readonly createAnimal = inject(CreateAnimalUseCase);
+  private readonly maxFileSizeBytes = 10 * 1024 * 1024;
 
   name = '';
   species = '';
@@ -128,23 +149,48 @@ export class AddAnimalModalComponent {
   weightKg = '10.0';
   entryDate = '';
   previewUrl = '';
-  uploadedPhotoUrl = '';
+  selectedFile?: File;
   selectedZoneId = '';
+  isSubmitting = false;
+  errorMessage = '';
+  successMessage = '';
 
-  async onFileSelected(event: Event): Promise<void> {
+  onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
-      this.previewUrl = URL.createObjectURL(file);
-      try {
-        this.uploadedPhotoUrl = await this.animalRepo.uploadPhoto(file);
-      } catch (error) {
-        console.error('Failed to upload photo', error);
+      this.errorMessage = '';
+      this.successMessage = '';
+
+      if (!file.type.startsWith('image/')) {
+        this.errorMessage = 'animals.photoInvalidType';
+        input.value = '';
+        return;
       }
+
+      if (file.size > this.maxFileSizeBytes) {
+        this.errorMessage = 'animals.photoTooLarge';
+        input.value = '';
+        return;
+      }
+
+      this.revokePreview();
+      this.selectedFile = file;
+      this.previewUrl = URL.createObjectURL(file);
     }
   }
 
-  register(): void {
+  removeSelectedImage(input?: HTMLInputElement): void {
+    this.revokePreview();
+    this.selectedFile = undefined;
+    if (input) {
+      input.value = '';
+    }
+  }
+
+  async register(): Promise<void> {
+    if (this.isSubmitting) return;
+
     const ageYears = parseInt(this.years || '0', 10);
     const ageMonths = parseInt(this.months || '0', 10);
     let ageStr = '';
@@ -159,7 +205,24 @@ export class AddAnimalModalComponent {
       ageStr = 'Unknown age';
     }
 
-    const animalData: Omit<Animal, 'id'> = {
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    let uploadCompleted = !this.selectedFile;
+
+    try {
+      let photoUrl = '';
+      if (this.selectedFile) {
+        const uploadResponse = await firstValueFrom(this.mediaService.uploadImage(this.selectedFile));
+        photoUrl = uploadResponse.secureUrl || uploadResponse.url || '';
+
+        if (!photoUrl) {
+          throw new Error('Media upload response did not include a usable image URL.');
+        }
+        uploadCompleted = true;
+      }
+
+      const animalData: Omit<Animal, 'id'> = {
       name: this.name || 'Unnamed',
       species: (this.species.trim().toLowerCase() === 'cat' || this.species.trim().toLowerCase() === 'gato') ? 'Cat' : 'Dog',
       breed: this.breed || 'Unknown breed',
@@ -167,17 +230,32 @@ export class AddAnimalModalComponent {
       weightKg: Number(this.weightKg) || 10.0,
       status: (this.initialHealth === 'Warning' || this.initialHealth === 'Critical') ? this.initialHealth : 'Healthy',
       zoneId: this.selectedZoneId || 'puppies',
-      photoUrl: this.uploadedPhotoUrl || '/assets/bluepatitas/animal-firulais.png',
+      photoUrl,
       entryDate: this.entryDate || new Date().toISOString().split('T')[0],
       notes: 'Registered via form.'
-    };
+      };
 
-    this.registered.emit(animalData);
+      const created = await this.createAnimal.execute(animalData);
+      this.successMessage = 'animals.animalCreated';
+      this.registered.emit(created);
+      this.reset();
+      this.closed.emit();
+    } catch (error) {
+      console.error('Failed to register animal', error);
+      this.errorMessage = uploadCompleted ? 'animals.createError' : 'animals.photoUploadError';
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  handleClose(): void {
+    if (this.isSubmitting) return;
     this.reset();
     this.closed.emit();
   }
 
   private reset(): void {
+    this.revokePreview();
     this.name = '';
     this.species = '';
     this.breed = '';
@@ -188,8 +266,16 @@ export class AddAnimalModalComponent {
     this.weightKg = '10.0';
     this.entryDate = '';
     this.previewUrl = '';
-    this.uploadedPhotoUrl = '';
+    this.selectedFile = undefined;
     this.selectedZoneId = 'puppies';
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  private revokePreview(): void {
+    if (this.previewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.previewUrl);
+    }
   }
 }
 

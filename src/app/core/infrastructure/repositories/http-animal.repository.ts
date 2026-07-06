@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { Animal } from '../../domain/models/bluepatitas.models';
 import { AnimalRepository } from '../../domain/repositories/repository.tokens';
 import { ApiAnimal, RegisterAnimalRequest } from '../../domain/models/animals-api.models';
+import { MediaUploadResponse } from '../../domain/models/media.models';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -124,7 +125,7 @@ export class HttpAnimalRepository implements AnimalRepository {
 
   /**
    * Helper to upload a profile image file to the backend media endpoint.
-   * Returns the relative url path (e.g. /uploads/filename.png).
+   * Returns the best available public URL from the backend media response.
    */
   async uploadPhoto(file: File): Promise<string> {
     const formData = new FormData();
@@ -132,9 +133,9 @@ export class HttpAnimalRepository implements AnimalRepository {
     const uploadUrl = `${environment.apiBaseUrl.replace(/\/$/, '')}/api/v1/media/upload`;
     
     const response = await firstValueFrom(
-      this.http.post<{ url: string }>(uploadUrl, formData)
+      this.http.post<MediaUploadResponse>(uploadUrl, formData)
     );
-    return response.url;
+    return response.secureUrl || response.url || '';
   }
 
   // ── Mappers & Helpers ──────────────────────────────────────────────────────
