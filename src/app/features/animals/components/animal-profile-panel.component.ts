@@ -21,7 +21,7 @@ declare const L: any;
     @if (animal) {
       <aside>
         <header class="hero">
-          <img [src]="animal.photoUrl" [alt]="animal.name" />
+          <img [src]="animal.photoUrl || placeholderPhoto" [alt]="animal.name" (error)="usePlaceholder($event)" />
           <div>
             <h2>{{ animal.name }}</h2>
             <div class="chips">
@@ -346,6 +346,8 @@ declare const L: any;
   `],
 })
 export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy {
+  readonly placeholderPhoto = '/assets/bluepatitas/animal-firulais.png';
+
   @Input() animal?: Animal;
   @Input() zoneName = 'Patio 1';
   @Input() zones: MonitoringZone[] = [];
@@ -771,6 +773,13 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       alert('Error al enviar comando manual al Edge Gateway');
     } finally {
       this.manualDispensing = false;
+    }
+  }
+
+  usePlaceholder(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    if (!image.src.endsWith(this.placeholderPhoto)) {
+      image.src = this.placeholderPhoto;
     }
   }
 }

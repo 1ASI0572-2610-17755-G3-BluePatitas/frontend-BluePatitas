@@ -9,7 +9,7 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
   imports: [StatusChipComponent, TranslatePipe],
   template: `
     <button type="button" (click)="selected.emit(animal)" [class.selected]="selectedId === animal.id">
-      <img [src]="animal.photoUrl" [alt]="animal.name" />
+      <img [src]="animal.photoUrl || placeholderPhoto" [alt]="animal.name" (error)="usePlaceholder($event)" />
       <div class="content">
         <strong>{{ animal.name }}</strong>
         <small>ID: {{ animal.id.toUpperCase() }}</small>
@@ -43,8 +43,17 @@ import { StatusChipComponent } from '../status-chip/status-chip.component';
   `],
 })
 export class AnimalCardComponent {
+  readonly placeholderPhoto = '/assets/bluepatitas/animal-firulais.png';
+
   @Input({ required: true }) animal!: Animal;
   @Input() selectedId = '';
   @Input() zoneLabel = '';
   @Output() selected = new EventEmitter<Animal>();
+
+  usePlaceholder(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    if (!image.src.endsWith(this.placeholderPhoto)) {
+      image.src = this.placeholderPhoto;
+    }
+  }
 }
