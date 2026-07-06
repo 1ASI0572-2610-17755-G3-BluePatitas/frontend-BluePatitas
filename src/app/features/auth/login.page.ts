@@ -6,6 +6,7 @@ import { BpButtonComponent } from '../../shared/components/bp-button/bp-button.c
 import { FormFieldComponent } from '../../shared/components/form-field/form-field.component';
 import { LoginUseCase } from '../../core/application/use-cases/bluepatitas.use-cases';
 import { FcmNotificationService } from '../../shared/services/fcm-notification.service';
+import { SessionService } from '../../core/auth/session.service';
 
 @Component({
   standalone: true,
@@ -16,13 +17,13 @@ import { FcmNotificationService } from '../../shared/services/fcm-notification.s
         <div class="form-card">
           <h1>{{ 'auth.signIn' | translate }}</h1>
           <p>{{ 'auth.loginSubtitle' | translate }}</p>
-          
+
           @if (errorMessage) {
             <div class="error-banner">{{ errorMessage }}</div>
           }
 
           <bp-form-field [label]="'auth.email' | translate" placeholder="admin@refugiowuf.org" [(value)]="email" />
-          <bp-form-field [label]="'auth.password' | translate" type="password" placeholder="••••••••" [(value)]="password" />
+          <bp-form-field [label]="'auth.password' | translate" type="password" placeholder="********" [(value)]="password" />
           <a class="forgot" href="#">{{ 'auth.forgot' | translate }}</a>
           <bp-button (clicked)="onSubmit()">{{ 'auth.signIn' | translate }}</bp-button>
           <small>{{ 'auth.noAccount' | translate }} <a routerLink="/register">{{ 'auth.signUp' | translate }}</a></small>
@@ -54,33 +55,46 @@ export class LoginPage {
   constructor(
     private readonly loginUseCase: LoginUseCase,
     private readonly router: Router,
-    private readonly fcmService: FcmNotificationService
+    private readonly fcmService: FcmNotificationService,
+    private readonly session: SessionService
   ) {}
 
   async onSubmit(): Promise<void> {
     this.errorMessage = '';
-    
+
     if (!this.email || !this.password) {
-      this.errorMessage = 'Por favor ingresa correo y contraseña.';
+      this.errorMessage = 'Please enter email and password.';
       return;
     }
 
     try {
       const result = await this.loginUseCase.execute(this.email.trim(), this.password);
-      if (result) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('currentUser', JSON.stringify(result.user));
-        
-        // Request Notification permission and send FCM token to backend
-        this.fcmService.requestPermissionAndRegisterToken(result.user.id);
-
-        this.router.navigate(['/dashboard']);
-      } else {
-        this.errorMessage = 'Usuario o contraseña incorrectos.';
+      if (!result) {
+        this.errorMessage = 'Invalid email or password.';
+        return;
       }
-    } catch (error) {
-      this.errorMessage = 'Ocurrió un error al iniciar sesión.';
+
+      this.session.saveSession(result.token, result.user);
+      const user = this.session.getCurrentUser();
+
+      if (user?.id) {
+        this.fcmService.requestPermissionAndRegisterToken(user.id);
+      }
+
+      if (user?.role === 'VETERINARIAN') {
+        void this.router.navigate(['/veterinary']);
+        return;
+      }
+
+      if (user?.role === 'SHELTER_ADMIN') {
+        void this.router.navigate(['/dashboard']);
+        return;
+      }
+
+      this.session.clearSession();
+      this.errorMessage = 'Your user role is not enabled for this web application.';
+    } catch {
+      this.errorMessage = 'An error occurred while signing in.';
     }
   }
 }
-

@@ -2,6 +2,30 @@ import { inject, Injectable } from '@angular/core';
 import { VETERINARY_API_REPOSITORY } from '../../domain/repositories/veterinary-repository.token';
 import { AddRecommendationRequest, CreateObservationRequest } from '../../domain/models/veterinary-api.models';
 
+@Injectable({ providedIn: 'root' })
+export class GetVeterinaryDashboardUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute() {
+    return this.repository.getMyDashboard();
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class GetVeterinaryAnimalsUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute() {
+    return this.repository.getMyAnimals();
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class GetVeterinaryAnimalDetailUseCase {
+  private readonly repository = inject(VETERINARY_API_REPOSITORY);
+  execute(animalId: string) {
+    return this.repository.getAnimalDetail(animalId);
+  }
+}
+
 /**
  * CreateApiObservationUseCase
  * Endpoint: POST /api/veterinary/observations

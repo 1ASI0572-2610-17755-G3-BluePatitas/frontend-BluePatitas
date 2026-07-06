@@ -15,6 +15,32 @@ export interface ApiVeterinaryObservation {
   createdAt: string;  // ISO-8601 LocalDateTime as string
 }
 
+export interface VeterinaryDashboardResource {
+  veterinarianId: number;
+  veterinarianName: string;
+  shelterId: string;
+  shelterName: string;
+  assignedAnimalsCount: number;
+  pendingObservationsCount: number;
+  activeAlertsCount: number;
+  recentObservationsCount: number;
+}
+
+export interface VeterinaryAnimalResource {
+  id: string;
+  name: string;
+  species: string;
+  breed: string;
+  photoUrl: string | null;
+  healthCondition: string;
+  weightKg: number | null;
+  shelterId: string;
+}
+
+export interface VeterinaryAnimalDetailResource extends VeterinaryAnimalResource {
+  observations?: ApiVeterinaryObservation[];
+}
+
 /** Request body for POST /api/veterinary/observations */
 export interface CreateObservationRequest {
   animalId: string;

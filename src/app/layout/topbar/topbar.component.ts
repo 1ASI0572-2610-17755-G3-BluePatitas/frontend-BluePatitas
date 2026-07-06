@@ -5,6 +5,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { SupportedLanguage, TranslationService } from '../../core/i18n/translation.service';
 import { GetShelterSettingsUseCase } from '../../core/application/use-cases/bluepatitas.use-cases';
+import { SessionService } from '../../core/auth/session.service';
 
 @Component({
   selector: 'bp-topbar',
@@ -53,10 +54,13 @@ export class TopbarComponent implements OnInit {
 
   constructor(
     private readonly translations: TranslationService,
-    private readonly getShelter: GetShelterSettingsUseCase
+    private readonly getShelter: GetShelterSettingsUseCase,
+    private readonly session: SessionService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    const user = this.session.getCurrentUser();
+
     try {
       const shelter = await this.getShelter.execute();
       if (shelter && shelter.name) {
@@ -66,23 +70,14 @@ export class TopbarComponent implements OnInit {
       console.warn('Failed to load shelter settings for topbar:', err);
     }
 
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        const namePart = (user.name || 'Santiago').split(' ')[0];
-        let rolePart = user.role || 'Admin';
-        if (rolePart === 'Administrator') {
-          rolePart = 'Admin';
-        } else if (rolePart === 'Veterinarian') {
-          rolePart = 'Vet';
-        } else if (rolePart === 'Caretaker') {
-          rolePart = 'Care';
-        }
-        this.currentUserText = `${namePart} - ${rolePart}`;
-      } catch (e) {
-        console.warn('Failed to parse current user:', e);
-      }
+    if (user?.shelterName) {
+      this.shelterName = user.shelterName;
+    }
+
+    if (user) {
+      const namePart = (user.name || user.email || 'User').split(' ')[0];
+      const rolePart = user.role === 'VETERINARIAN' ? 'Vet' : user.role === 'SHELTER_ADMIN' ? 'Admin' : 'Care';
+      this.currentUserText = `${namePart} - ${rolePart}`;
     }
   }
 

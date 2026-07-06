@@ -3,11 +3,12 @@ import { Router } from '@angular/router';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { GetShelterSettingsUseCase } from '../../core/application/use-cases/bluepatitas.use-cases';
+import { SessionService } from '../../core/auth/session.service';
 
 interface NavItem {
   labelKey: string;
   path: string;
-  icon: 'dashboard' | 'animals' | 'monitoring' | 'veterinarians' | 'settings';
+  icon: 'dashboard' | 'animals' | 'monitoring' | 'veterinarians' | 'settings' | 'alerts' | 'feeding';
 }
 
 @Component({
@@ -25,7 +26,7 @@ interface NavItem {
       </section>
       <nav>
         @for (item of items; track item.path) {
-          <a [routerLink]="item.path" routerLinkActive="active" (click)="navigate.emit()">
+          <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' || item.path === '/veterinary' }" (click)="navigate.emit()">
             <span class="nav-icon" [class]="item.icon" aria-hidden="true"></span>
             {{ item.labelKey | translate }}
           </a>
@@ -62,6 +63,10 @@ interface NavItem {
     .veterinarians::after { left: 7px; top: 0; width: 4px; height: 10px; border: 2px solid currentColor; border-top: 0; border-bottom: 0; }
     .settings::before { inset: 2px; border: 2px solid currentColor; border-radius: 50%; }
     .settings::after { left: 7px; top: 7px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; box-shadow: 0 -8px 0 -1px currentColor, 0 8px 0 -1px currentColor, -8px 0 0 -1px currentColor, 8px 0 0 -1px currentColor; }
+    .alerts::before { inset: 2px 4px; border: 2px solid currentColor; border-radius: 8px 8px 3px 3px; }
+    .alerts::after { left: 8px; bottom: 1px; width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
+    .feeding::before { left: 3px; top: 2px; width: 5px; height: 13px; border-left: 2px solid currentColor; border-right: 2px solid currentColor; }
+    .feeding::after { right: 3px; top: 2px; width: 6px; height: 14px; border: 2px solid currentColor; border-top: 0; border-radius: 0 0 6px 6px; }
     footer { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-top: 1px solid var(--bp-border); font-size: 13px; }
     footer img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
     footer button { margin-left: auto; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: currentColor; cursor: pointer; }
@@ -78,20 +83,33 @@ export class SidebarComponent implements OnInit {
   shelterName = 'Refugio WUF';
   currentUserText = 'Santiago - Admin';
 
-  readonly items: NavItem[] = [
+  items: NavItem[] = [];
+
+  private readonly adminItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard' },
     { labelKey: 'nav.animals', path: '/animals', icon: 'animals' },
     { labelKey: 'nav.monitoring', path: '/monitoring', icon: 'monitoring' },
     { labelKey: 'nav.veterinarians', path: '/veterinarians', icon: 'veterinarians' },
+    { labelKey: 'nav.alerts', path: '/alerts', icon: 'alerts' },
+    { labelKey: 'nav.feeding', path: '/feeding', icon: 'feeding' },
     { labelKey: 'nav.settings', path: '/settings', icon: 'settings' },
+  ];
+
+  private readonly veterinarianItems: NavItem[] = [
+    { labelKey: 'nav.veterinaryDashboard', path: '/veterinary', icon: 'dashboard' },
+    { labelKey: 'nav.myAnimals', path: '/veterinary/animals', icon: 'animals' },
   ];
 
   constructor(
     private readonly router: Router,
-    private readonly getShelter: GetShelterSettingsUseCase
+    private readonly getShelter: GetShelterSettingsUseCase,
+    private readonly session: SessionService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    const user = this.session.getCurrentUser();
+    this.items = user?.role === 'VETERINARIAN' ? this.veterinarianItems : this.adminItems;
+
     try {
       const shelter = await this.getShelter.execute();
       if (shelter && shelter.name) {
@@ -101,27 +119,19 @@ export class SidebarComponent implements OnInit {
       console.warn('Failed to load shelter settings for sidebar:', err);
     }
 
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        const namePart = (user.name || 'Santiago').split(' ')[0];
-        let rolePart = user.role || 'Admin';
-        if (rolePart === 'Administrator') {
-          rolePart = 'Admin';
-        } else if (rolePart === 'Veterinarian') {
-          rolePart = 'Vet';
-        } else if (rolePart === 'Caretaker') {
-          rolePart = 'Care';
-        }
-        this.currentUserText = `${namePart} - ${rolePart}`;
-      } catch (e) {
-        console.warn('Failed to parse current user:', e);
-      }
+    if (user?.shelterName) {
+      this.shelterName = user.shelterName;
+    }
+
+    if (user) {
+      const namePart = (user.name || user.email || 'User').split(' ')[0];
+      const rolePart = user.role === 'VETERINARIAN' ? 'Vet' : user.role === 'SHELTER_ADMIN' ? 'Admin' : 'Care';
+      this.currentUserText = `${namePart} - ${rolePart}`;
     }
   }
 
   logout(): void {
+    this.session.clearSession();
     this.navigate.emit();
     void this.router.navigateByUrl('/login');
   }
