@@ -54,6 +54,7 @@ import { ApiFeedingPlan } from '../../core/domain/models/feeding-api.models';
       [zoneName]="selectedAnimal ? zoneName(selectedAnimal.zoneId) : ''"
       [zones]="zones"
       [activePlan]="activePlan"
+      [dietPlanErrorKey]="dietPlanErrorKey"
       (closed)="selectedAnimal = undefined"
       (assignDiet)="dietOpen = true"
       (viewReports)="openReports()"
@@ -88,6 +89,7 @@ export class AnimalsPage implements OnInit {
 
   editOpen = false;
   activePlan?: ApiFeedingPlan;
+  dietPlanErrorKey = '';
 
   constructor(
     private readonly getAnimals: GetAnimalsUseCase,
@@ -141,11 +143,13 @@ export class AnimalsPage implements OnInit {
 
   async loadActivePlan(animalId: string): Promise<void> {
     this.activePlan = undefined;
+    this.dietPlanErrorKey = '';
     try {
       const plans = await this.feedingRepo.getPlansByAnimalId(animalId);
       this.activePlan = plans.find(p => p.status === 'ACTIVE') ?? plans[0];
     } catch (error) {
       console.warn('Failed to load active feeding plan for animal', animalId, error);
+      this.dietPlanErrorKey = 'feeding.planLoadError';
     }
   }
 

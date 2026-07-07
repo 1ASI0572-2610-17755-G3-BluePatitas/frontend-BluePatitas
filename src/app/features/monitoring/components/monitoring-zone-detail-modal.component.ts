@@ -9,6 +9,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { BpButtonComponent } from '../../../shared/components/bp-button/bp-button.component';
 import { BpModalComponent } from '../../../shared/components/bp-modal/bp-modal.component';
 import { ANIMAL_REPOSITORY, AnimalRepository } from '../../../core/domain/repositories/repository.tokens';
+import { EdgeGatewayService } from '../../../core/infrastructure/services/edge-gateway.service';
 
 declare const L: any;
 
@@ -485,6 +486,7 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
     private readonly processTelemetry: ProcessTelemetryUseCase,
     private readonly updateZoneUseCase: UpdateMonitoringZoneUseCase,
     private readonly deleteZoneUseCase: DeleteMonitoringZoneUseCase,
+    private readonly edgeGateway: EdgeGatewayService,
     @Inject(ANIMAL_REPOSITORY) private readonly animalRepo: AnimalRepository,
   ) {}
 
@@ -581,16 +583,15 @@ export class MonitoringZoneDetailModalComponent implements OnChanges, OnDestroy 
         await this.pollEdgeState();
         this.syncAnimalMarkers();
       }
-    }, 1000);
+    }, 10000);
   }
 
   async pollEdgeState() {
     try {
-      const response = await fetch('http://localhost:18090/api/simulador/estado');
-      if (response.ok) {
-        const data = await response.json();
-        this.edgeLat = data.latitude;
-        this.edgeLng = data.longitude;
+      const result = await this.edgeGateway.getSimulatorStatus();
+      if (result.ok && result.data) {
+        this.edgeLat = result.data.latitude ?? null;
+        this.edgeLng = result.data.longitude ?? null;
       }
     } catch (err) {
       console.warn('Failed to poll Edge state from detail modal', err);

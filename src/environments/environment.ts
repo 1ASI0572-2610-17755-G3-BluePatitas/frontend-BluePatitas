@@ -8,6 +8,8 @@ export const environment = {
   production: false,
   /** Base URL of the BluePatitas Spring Boot backend (no trailing slash). */
   apiBaseUrl: 'http://localhost:8080',
+  /** Local Edge Gateway used by IoT devices in the shelter network. */
+  edgeGatewayBaseUrl: 'http://localhost:18090',
   firebaseConfig: {
     apiKey: "AIzaSyAXvxStbzvI65fMwuTFsX4wk87n6PIwcqk",
     authDomain: "flowtracknotis.firebaseapp.com",
