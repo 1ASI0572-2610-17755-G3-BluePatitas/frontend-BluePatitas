@@ -1,5 +1,4 @@
 import { Component, EventEmitter, Input, Output, inject, OnInit, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Animal, MonitoringZone } from '../../../core/domain/models/bluepatitas.models';
@@ -8,16 +7,16 @@ import { PerimeterAlert } from '../../../core/domain/models/monitoring-api.model
 import { GetPerimeterAlertsUseCase, EnableTrackingUseCase, ResolveAlertUseCase, DismissAlertUseCase } from '../../../core/application/use-cases/monitoring.use-cases';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { TranslationService } from '../../../core/i18n/translation.service';
-import { BpButtonComponent } from '../../../shared/components/bp-button/bp-button.component';
 import { StatusChipComponent } from '../../../shared/components/status-chip/status-chip.component';
 import { ANIMAL_REPOSITORY } from '../../../core/domain/repositories/repository.tokens';
+import { EdgeGatewayService } from '../../../core/infrastructure/services/edge-gateway.service';
 
 declare const L: any;
 
 @Component({
   selector: 'bp-animal-profile-panel',
   standalone: true,
-  imports: [TranslatePipe, BpButtonComponent, StatusChipComponent, DecimalPipe, FormsModule],
+  imports: [TranslatePipe, StatusChipComponent, DecimalPipe, FormsModule],
   template: `
     @if (animal) {
       <aside>
@@ -74,6 +73,9 @@ declare const L: any;
               <h3>{{ 'animals.diet' | translate }}</h3>
               <button type="button" (click)="assignDiet.emit()">{{ (activePlan ? 'animals.editDiet' : 'animals.assignDiet') | translate }}</button>
             </div>
+            @if (dietPlanErrorKey) {
+              <p>{{ dietPlanErrorKey | translate }}</p>
+            }
             @if (activePlan) {
               <label>{{ 'animals.foodBrand' | translate }}</label>
               <p>{{ formatDietName(activePlan.dietType.name) }}</p>
@@ -353,6 +355,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
   @Input() zoneName = 'Patio 1';
   @Input() zones: MonitoringZone[] = [];
   @Input() activePlan?: ApiFeedingPlan;
+  @Input() dietPlanErrorKey = '';
   @Output() closed = new EventEmitter<void>();
   @Output() assignDiet = new EventEmitter<void>();
   @Output() viewReports = new EventEmitter<void>();
@@ -376,7 +379,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
   circle: any = null;
   marker: any = null;
 
-  private readonly http = inject(HttpClient);
+  private readonly edgeGateway = inject(EdgeGatewayService);
   private readonly animalRepo = inject(ANIMAL_REPOSITORY);
   private readonly getPerimeterAlerts = inject(GetPerimeterAlertsUseCase);
   private readonly enableTrackingUseCase = inject(EnableTrackingUseCase);
@@ -392,9 +395,14 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
   scheduleActive = false;
   schedulingLoading = false;
   manualDispensing = false;
+  edgeOnline = false;
+  edgeLoading = false;
+  edgeLastChecked?: Date;
+  dispenserMessageKey = '';
+  scheduleInterval = 'cada 5 minuto';
 
   ngOnInit() {
-    this.checkScheduleStatus();
+    this.refreshEdgeStatus();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -480,6 +488,9 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
     }
     if (tab === 'alerts') {
       this.loadAlerts();
+    }
+    if (tab === 'diet') {
+      this.refreshEdgeStatus();
     }
   }
 
@@ -630,6 +641,12 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
     }
   }
 
+  private updateMarkerPosition(): void {
+    if (this.marker && typeof this.simLat === 'number' && typeof this.simLng === 'number') {
+      this.marker.setLatLng([this.simLat, this.simLng]);
+    }
+  }
+
   async updateBasePosition(lat: number, lng: number) {
     this.simLat = lat;
     this.simLng = lng;
@@ -638,11 +655,11 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
     }
     try {
       const currentZone = this.zones.find(z => z.id === this.animal?.zoneId);
-      await this.http.post('http://localhost:18090/api/simulador/config', {
+      await this.edgeGateway.configureSimulator({
         latitude: lat,
         longitude: lng,
         targetId: currentZone?.targetId
-      }).toPromise();
+      });
     } catch (err) {
       console.warn('Failed to configure simulator base position', err);
     }
@@ -650,18 +667,23 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
 
   async toggleSimulation() {
     if (!this.animal) return;
-    const url = this.isSimulating ? 'http://localhost:18090/api/simulador/detener' : 'http://localhost:18090/api/simulador/iniciar';
     try {
-      const res: any = await this.http.post(url, {}).toPromise();
-      if (res) {
-        this.isSimulating = res.simulacion_activa;
-        if (res.latitude !== undefined) {
-          this.simLat = res.latitude;
-          this.simLng = res.longitude;
-          if (this.marker) {
-            this.marker.setLatLng([this.simLat, this.simLng]);
-          }
+      const result = this.isSimulating
+        ? await this.edgeGateway.stopSimulator()
+        : await this.edgeGateway.startSimulator();
+      if (result.ok && result.data) {
+        this.edgeOnline = true;
+        this.edgeLastChecked = result.checkedAt;
+        this.isSimulating = !!result.data.simulacion_activa;
+        if (result.data.latitude !== undefined) {
+          this.simLat = result.data.latitude;
+          this.simLng = result.data.longitude ?? null;
+          this.updateMarkerPosition();
         }
+      } else {
+        this.edgeOnline = false;
+        this.edgeLastChecked = result.checkedAt;
+        alert(this.translationService.translate('animals.errorSimulatorEdge'));
       }
     } catch (err) {
       console.error('Failed to toggle simulation', err);
@@ -672,13 +694,16 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
   async returnToStart() {
     if (!this.animal) return;
     try {
-      const res: any = await this.http.post('http://localhost:18090/api/simulador/regresar', {}).toPromise();
-      if (res) {
-        this.simLat = res.latitude;
-        this.simLng = res.longitude;
-        if (this.marker) {
-          this.marker.setLatLng([this.simLat, this.simLng]);
-        }
+      const result = await this.edgeGateway.returnHome();
+      if (result.ok && result.data) {
+        this.edgeOnline = true;
+        this.edgeLastChecked = result.checkedAt;
+        this.simLat = result.data.latitude ?? null;
+        this.simLng = result.data.longitude ?? null;
+        this.updateMarkerPosition();
+      } else {
+        this.edgeOnline = false;
+        this.edgeLastChecked = result.checkedAt;
       }
     } catch (err) {
       console.error('Failed to reset simulation', err);
@@ -689,13 +714,16 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
   async sendFarAway() {
     if (!this.animal) return;
     try {
-      const res: any = await this.http.post('http://localhost:18090/api/simulador/alejar', {}).toPromise();
-      if (res) {
-        this.simLat = res.latitude;
-        this.simLng = res.longitude;
-        if (this.marker) {
-          this.marker.setLatLng([this.simLat, this.simLng]);
-        }
+      const result = await this.edgeGateway.moveAway();
+      if (result.ok && result.data) {
+        this.edgeOnline = true;
+        this.edgeLastChecked = result.checkedAt;
+        this.simLat = result.data.latitude ?? null;
+        this.simLng = result.data.longitude ?? null;
+        this.updateMarkerPosition();
+      } else {
+        this.edgeOnline = false;
+        this.edgeLastChecked = result.checkedAt;
       }
     } catch (err) {
       console.error('Failed to send far away', err);
@@ -710,7 +738,7 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
       if (this.hasGps) {
         this.pollGpsStatus();
       }
-    }, 1000);
+    }, 10000);
   }
 
   stopGpsPolling() {
@@ -723,15 +751,15 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
   async pollGpsStatus() {
     if (!this.animal || !this.hasGps) return;
     try {
-      const res = await this.http.get<any>('http://localhost:18090/api/simulador/estado').toPromise();
-      if (res) {
-        this.isSimulating = res.simulacion_activa;
-        this.simLat = res.latitude;
-        this.simLng = res.longitude;
+      const result = await this.edgeGateway.getSimulatorStatus();
+      this.edgeOnline = result.ok;
+      this.edgeLastChecked = result.checkedAt;
+      if (result.ok && result.data) {
+        this.isSimulating = !!result.data.simulacion_activa;
+        this.simLat = result.data.latitude ?? null;
+        this.simLng = result.data.longitude ?? null;
         
-        if (this.map && this.marker) {
-          this.marker.setLatLng([this.simLat, this.simLng]);
-        }
+        this.updateMarkerPosition();
       }
     } catch (err) {
       console.warn('Failed to poll GPS status from Edge Gateway', err);
@@ -753,41 +781,76 @@ export class AnimalProfilePanelComponent implements OnInit, OnChanges, OnDestroy
   }
 
   async checkScheduleStatus() {
-    try {
-      const res = await this.http.get<any>('http://localhost:18090/api/dispensador/configurar_horario').toPromise();
-      this.scheduleActive = res.activo;
-    } catch (err) {
-      console.warn('Could not read schedule status from Edge Gateway', err);
+    const result = await this.edgeGateway.getScheduleConfig();
+    this.edgeOnline = result.ok;
+    this.edgeLastChecked = result.checkedAt;
+    if (result.ok && result.data) {
+      this.scheduleActive = !!result.data.activo;
+      this.scheduleInterval = String(result.data.intervalo || this.scheduleInterval);
     }
   }
 
   async toggleSchedule() {
-    if (!this.activePlan) return;
+    if (!this.activePlan || this.schedulingLoading) return;
     this.schedulingLoading = true;
+    this.dispenserMessageKey = '';
     try {
-      const res = await this.http.post<any>('http://localhost:18090/api/dispensador/configurar_horario', {
-        activo: !this.scheduleActive,
-        intervalo: this.activePlan.schedule.scheduledTimes
-      }).toPromise();
-      this.scheduleActive = res.activo;
+      const interval = this.activePlan.schedule.scheduledTimes || this.scheduleInterval;
+      const result = await this.edgeGateway.configureSchedule(!this.scheduleActive, interval);
+      this.edgeOnline = result.ok;
+      this.edgeLastChecked = result.checkedAt;
+      if (result.ok && result.data) {
+        this.scheduleActive = !!result.data.activo;
+        this.scheduleInterval = String(result.data.intervalo || interval);
+        this.dispenserMessageKey = this.scheduleActive ? 'feeding.scheduleEnabled' : 'feeding.scheduleDisabled';
+      } else {
+        this.dispenserMessageKey = 'feeding.scheduleError';
+        alert(this.translationService.translate('feeding.scheduleError'));
+      }
     } catch (err) {
       console.error('Failed to toggle schedule on Edge Gateway', err);
-      alert(this.translationService.translate('animals.errorEdge'));
+      this.dispenserMessageKey = 'feeding.scheduleError';
+      alert(this.translationService.translate('feeding.scheduleError'));
     } finally {
       this.schedulingLoading = false;
     }
   }
 
   async triggerManual() {
+    if (this.manualDispensing) return;
     this.manualDispensing = true;
+    this.dispenserMessageKey = '';
     try {
-      await this.http.post<any>('http://localhost:18090/api/dispensador/forzar_alimento', {}).toPromise();
-      alert(this.translationService.translate('animals.manualDispenseSuccess'));
+      const result = await this.edgeGateway.forceFeed();
+      this.edgeOnline = result.ok;
+      this.edgeLastChecked = result.checkedAt;
+      this.dispenserMessageKey = result.ok ? 'feeding.manualDispenseSuccess' : 'feeding.manualDispenseError';
+      alert(this.translationService.translate(this.dispenserMessageKey));
     } catch (err) {
       console.error('Failed to trigger manual dispensation', err);
-      alert(this.translationService.translate('animals.errorManualDispense'));
+      this.dispenserMessageKey = 'feeding.manualDispenseError';
+      alert(this.translationService.translate(this.dispenserMessageKey));
     } finally {
       this.manualDispensing = false;
+    }
+  }
+
+  async refreshEdgeStatus() {
+    if (this.edgeLoading) return;
+    this.edgeLoading = true;
+    try {
+      const [dispenser, schedule] = await Promise.all([
+        this.edgeGateway.getDispenserStatus(),
+        this.edgeGateway.getScheduleConfig(),
+      ]);
+      this.edgeOnline = dispenser.ok || schedule.ok;
+      this.edgeLastChecked = dispenser.checkedAt;
+      if (schedule.ok && schedule.data) {
+        this.scheduleActive = !!schedule.data.activo;
+        this.scheduleInterval = String(schedule.data.intervalo || this.scheduleInterval);
+      }
+    } finally {
+      this.edgeLoading = false;
     }
   }
 

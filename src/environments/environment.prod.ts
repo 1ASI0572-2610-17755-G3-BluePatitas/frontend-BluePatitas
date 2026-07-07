@@ -5,6 +5,8 @@ export const environment = {
   production: true,
   /** Base URL of the BluePatitas Spring Boot backend in production. */
   apiBaseUrl: 'https://backend-bluepatitas.onrender.com',
+  /** Edge Gateway is intentionally local to the shelter/Raspberry environment. */
+  edgeGatewayBaseUrl: 'http://localhost:18090',
   firebaseConfig: {
     apiKey: "AIzaSyAXvxStbzvI65fMwuTFsX4wk87n6PIwcqk",
     authDomain: "flowtracknotis.firebaseapp.com",
